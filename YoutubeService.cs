@@ -178,6 +178,9 @@ namespace LimeYoutubeAPI
             return RunChatListener(channel.StreamID, update);
         }
 
+        public MultiChatListener RunMultiChatListener() => RunMultiChatListener(DefaultUpdate);
+        public MultiChatListener RunMultiChatListener(TimeSpan update) => new MultiChatListener(this, update);
+
         public void Dispose() => net.Dispose();
     }
 }
