@@ -85,16 +85,18 @@ namespace LimeYoutubeAPI
                 if (json == null) return null;
                 JObject videoDetails = (JObject)json["videoDetails"];
                 if (videoDetails == null) return null;
-                string VideoID = videoDetails["videoID"]?.Value<string>();
+                JObject microformat = (JObject)json["microformat"];
+                string VideoID = videoDetails["videoId"]?.Value<string>();
                 string ChannelID = videoDetails["channelId"]?.Value<string>();
                 string ChannelName = videoDetails["author"]?.Value<string>();
                 Uri Preview = new Uri(videoDetails["thumbnail"]["thumbnails"].Last["url"].Value<string>());
                 long Views = long.Parse(videoDetails["viewCount"]?.Value<string>());
                 string Title = videoDetails["title"]?.Value<string>();
-                string Description = videoDetails["description"]?.Value<string>();
+                string Description = videoDetails["shortDescription"]?.Value<string>();
                 TimeSpan VideoLength = TimeSpan.FromSeconds(long.Parse(videoDetails["lengthSeconds"]?.Value<string>() ?? "0"));
-                bool isLive = videoDetails.ContainsKey("isLive") && videoDetails["isLive"].Value<bool>();
-                if (isLive) return new YoutubeStream(VideoID, ChannelID, ChannelName, Preview, Views, Title, Description, VideoLength, json["microformat"]?["playerMicroformatRenderer"]?["liveBroadcastDetails"]?["startTimestamp"]?.Value<DateTime>().ToUniversalTime() ?? DateTime.MinValue);
+                JObject liveBroadcastDetails = (JObject)microformat?["playerMicroformatRenderer"]?["liveBroadcastDetails"];
+                bool isLive = liveBroadcastDetails != null;
+                if (isLive) return new YoutubeStream(VideoID, ChannelID, ChannelName, Preview, Views, Title, Description, VideoLength, liveBroadcastDetails?["startTimestamp"]?.Value<DateTime>().ToUniversalTime() ?? DateTime.MinValue);
                 return new YoutubeVideo(VideoID, ChannelID, ChannelName, Preview, Views, Title, Description, VideoLength);
             }
             catch
