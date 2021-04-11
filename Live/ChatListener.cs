@@ -12,15 +12,11 @@ namespace LimeYoutubeAPI.Live
     {
         private readonly YoutubeService service;
         private readonly CancellationTokenSource canceller = new CancellationTokenSource();
-        public Task Task { get; }
         public YoutubeStream YoutubeStream { get; private set; }
-        internal ChatListener(YoutubeService service, TimeSpan update, string videoID)
-        {
-            this.service = service;
-            Task = RunTask(update, videoID, canceller.Token);
-        }
+        internal ChatListener(YoutubeService service) => this.service = service;
         public event Action<ChatMessage> MessageEvent;
         public event Action<ChatState> StateEvent;
+        public Task Run(string videoID, TimeSpan? update = null) => RunTask(update ?? YoutubeService.DefaultUpdate, videoID, canceller.Token);
         private async Task RunTask(TimeSpan updateTimeout, string videoID, CancellationToken token)
         {
             try
@@ -54,7 +50,7 @@ namespace LimeYoutubeAPI.Live
                         StateEvent?.Invoke(new ChatState(400, "LiveChat closed"));
                         return;
                     }
-                    await Task.Delay(updateTimeout);
+                    await Task.Delay(updateTimeout, token);
                     token.ThrowIfCancellationRequested();
                     string firstMessageID = null;
                     IEnumerable<ChatMessage> messages = await service.GetChatMessages(liveChatInfo.FullLiveChat);
@@ -78,6 +74,11 @@ namespace LimeYoutubeAPI.Live
                 StateEvent?.Invoke(new ChatState(401, e.ToString()));
             }
         }
-        public void Dispose() => canceller.Cancel();
+        public void Dispose()
+        {
+            try { canceller.Cancel(); } catch { }
+            Ext.UnregAll(ref MessageEvent);
+            Ext.UnregAll(ref StateEvent);
+        }
     }
 }

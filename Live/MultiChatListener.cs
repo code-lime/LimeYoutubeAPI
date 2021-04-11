@@ -13,7 +13,6 @@ namespace LimeYoutubeAPI.Live
     {
         private readonly YoutubeService service;
         private readonly CancellationTokenSource canceller = new CancellationTokenSource();
-        public Task Task { get; }
         public class DataStream
         {
             internal string lastMessageID = null;
@@ -28,20 +27,17 @@ namespace LimeYoutubeAPI.Live
             }
         }
         public ConcurrentDictionary<string, DataStream> YoutubeStreams { get; } = new ConcurrentDictionary<string, DataStream>();
-        internal MultiChatListener(YoutubeService service, TimeSpan update)
-        {
-            this.service = service;
-            Task = RunMultiTask(update, canceller.Token);
-        }
+        internal MultiChatListener(YoutubeService service) => this.service = service;
         public event Action<string, ChatMessage> MessageEvent;
         public event Action<string, ChatState> StateEvent;
-        public void RunVideo(string videoID, Action<ChatMessage> messageEvent = null, Action<ChatState> stateEvent = null)
+        public Task Run(TimeSpan? update = null) => RunMultiTask(update ?? YoutubeService.DefaultUpdate, canceller.Token);
+        public void RegisterVideo(string videoID, Action<ChatMessage> messageEvent = null, Action<ChatState> stateEvent = null)
         {
             if (messageEvent != null) MessageEvent += (id, msg) => { if (id == videoID) messageEvent.Invoke(msg); };
             if (stateEvent != null) StateEvent += (id, msg) => { if (id == videoID) stateEvent.Invoke(msg); };
             YoutubeStreams[videoID] = null;
         }
-        public void RunChannel(string channelID, Action<ChatMessage> messageEvent = null, Action<ChatState> stateEvent = null) => Task.Run(async () =>
+        public async Task RegisterChannel(string channelID, Action<ChatMessage> messageEvent = null, Action<ChatState> stateEvent = null)
         {
             YoutubeChannel channel = await service.GetChannelAsync(channelID);
             if (channel.StreamID == null)
@@ -49,8 +45,8 @@ namespace LimeYoutubeAPI.Live
                 stateEvent?.Invoke(new ChatState(404, "Stream not founded"));
                 return;
             }
-            RunVideo(channel.StreamID, messageEvent, stateEvent);
-        });
+            RegisterVideo(channel.StreamID, messageEvent, stateEvent);
+        }
         private async Task RunMultiTask(TimeSpan updateTimeout, CancellationToken token)
         {
             try
@@ -122,6 +118,11 @@ namespace LimeYoutubeAPI.Live
 
             }
         }
-        public void Dispose() => canceller.Cancel();
+        public void Dispose()
+        {
+            try { canceller.Cancel(); } catch { }
+            Ext.UnregAll(ref MessageEvent);
+            Ext.UnregAll(ref StateEvent);
+        }
     }
 }

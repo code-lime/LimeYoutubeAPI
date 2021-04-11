@@ -167,21 +167,10 @@ namespace LimeYoutubeAPI
             return chatMessages == null ? null : getChatMessages(chatMessages);
         }
 
-        private readonly static TimeSpan DefaultUpdate = TimeSpan.FromSeconds(1);
+        internal readonly static TimeSpan DefaultUpdate = TimeSpan.FromSeconds(1);
 
-        public ChatListener RunChatListener(string videoID) => RunChatListener(videoID, DefaultUpdate);
-        public ChatListener RunChatListener(string videoID, TimeSpan update) => new ChatListener(this, update, videoID);
-
-        public Task<ChatListener> RunChatByChannel(string channelID) => RunChatByChannel(channelID, DefaultUpdate);
-        public async Task<ChatListener> RunChatByChannel(string channelID, TimeSpan update)
-        {
-            YoutubeChannel channel = await GetChannelAsync(channelID);
-            if (channel.StreamID == null) return null;
-            return RunChatListener(channel.StreamID, update);
-        }
-
-        public MultiChatListener RunMultiChatListener() => RunMultiChatListener(DefaultUpdate);
-        public MultiChatListener RunMultiChatListener(TimeSpan update) => new MultiChatListener(this, update);
+        public ChatListener CreateChatListener() => new ChatListener(this);
+        public MultiChatListener CreateMultiChatListener() => new MultiChatListener(this);
 
         public void Dispose() => net.Dispose();
     }

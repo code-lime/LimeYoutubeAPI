@@ -14,11 +14,11 @@ namespace LimeYoutubeAPI
         public static void Main(string[] args)
         {
             using (YoutubeService service = YoutubeService.Create())
-            using (MultiChatListener listener = service.RunMultiChatListener())
+            using (MultiChatListener listener = service.CreateMultiChatListener())
             {
-                listener.RunChannel("UCwKfmsba1g3SDcOzbU4zPXw", v => Listener_MessageEvent("ФУГА TV", v), v => Listener_StateEvent("ФУГА TV", v));
-                listener.RunChannel("UC0rdUtnXyfzgQQz25wrkbSQ", v => Listener_MessageEvent("TEMP", v), v => Listener_StateEvent("TEMP", v));
-                Task.WaitAll(listener.Task);
+                listener.RegisterChannel("UCwKfmsba1g3SDcOzbU4zPXw", v => Listener_MessageEvent("ФУГА TV", v), v => Listener_StateEvent("ФУГА TV", v)).Wait();
+                listener.RegisterChannel("UC0rdUtnXyfzgQQz25wrkbSQ", v => Listener_MessageEvent("TEMP", v), v => Listener_StateEvent("TEMP", v)).Wait();
+                Task.WaitAll(listener.Run());
                 /*ChatListener listener = await service.RunChatByChannel("UCwKfmsba1g3SDcOzbU4zPXw");
                 if (listener == null) return;
                 using (listener)
