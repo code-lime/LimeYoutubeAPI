@@ -104,6 +104,19 @@ namespace LimeYoutubeAPI
                 return null;
             }
         }
+        public async Task<string> GetVideoIDAsync(Uri video)
+        {
+            try
+            {
+                JObject json = await GetYoutubeData(video);
+                if (json == null) return null;
+                return json?["currentVideoEndpoint"]?["watchEndpoint"]?["videoId"]?.Value<string>();
+            }
+            catch
+            {
+                return null;
+            }
+        }
         public async Task<YoutubeLiveChatInfo> GetLiveChatInfo(string videoID)
         {
             JObject json = await GetYoutubeData(YoutubeURL.GetLiveChat(videoID));
@@ -163,8 +176,15 @@ namespace LimeYoutubeAPI
         }
         public async Task<IEnumerable<ChatMessage>> GetChatMessages(Uri liveChat)
         {
-            JArray chatMessages = await GetChatMessagesData(liveChat);
-            return chatMessages == null ? null : getChatMessages(chatMessages);
+            try
+            {
+                JArray chatMessages = await GetChatMessagesData(liveChat);
+                return chatMessages == null ? null : getChatMessages(chatMessages);
+            }
+            catch
+            {
+                return null;
+            }
         }
 
         internal readonly static TimeSpan DefaultUpdate = TimeSpan.FromSeconds(1);

@@ -16,6 +16,7 @@ namespace LimeYoutubeAPI
             using (YoutubeService service = YoutubeService.Create())
             using (MultiChatListener listener = service.CreateMultiChatListener())
             {
+                var v = service.GetVideoIDAsync(new Uri("https://youtu.be/HfaazBDA8aE")).Result;
                 listener.RegisterChannel("UCwKfmsba1g3SDcOzbU4zPXw", v => Listener_MessageEvent("ФУГА TV", v), v => Listener_StateEvent("ФУГА TV", v)).Wait();
                 listener.RegisterChannel("UC0rdUtnXyfzgQQz25wrkbSQ", v => Listener_MessageEvent("TEMP", v), v => Listener_StateEvent("TEMP", v)).Wait();
                 Task.WaitAll(listener.Run());
