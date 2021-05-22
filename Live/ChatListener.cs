@@ -15,6 +15,7 @@ namespace LimeYoutubeAPI.Live
         public YoutubeStream YoutubeStream { get; private set; }
         internal ChatListener(YoutubeService service) => this.service = service;
         public event Action<ChatMessage> MessageEvent;
+        public event Action<ChatSponsor> SponsorEvent;
         public event Action<ChatState> StateEvent;
         public Task Run(string videoID, TimeSpan? update = null) => RunTask(update ?? YoutubeService.DefaultUpdate, videoID, canceller.Token);
         private async Task RunTask(TimeSpan updateTimeout, string videoID, CancellationToken token)
@@ -53,16 +54,17 @@ namespace LimeYoutubeAPI.Live
                     await Task.Delay(updateTimeout, token);
                     token.ThrowIfCancellationRequested();
                     string firstMessageID = null;
-                    IEnumerable<ChatMessage> messages = await service.GetChatMessages(liveChatInfo.FullLiveChat);
-                    if (messages == null)
+                    IEnumerable<IChatElement> elements = await service.GetChatElements(liveChatInfo.FullLiveChat);
+                    if (elements == null)
                     {
                         errors++;
                         continue;
                     }
-                    foreach (var message in messages.Where(message => { if (lastMessageID == null && message.UtcTime < utcInit) return false; if (firstMessageID == null) firstMessageID = message.MessageID; return true; }).TakeWhile(message => lastMessageID != message.MessageID).Reverse())
+                    foreach (var element in elements.Where(element => { if (lastMessageID == null && element.UtcTime < utcInit) return false; if (firstMessageID == null) firstMessageID = element.MessageID; return true; }).TakeWhile(element => lastMessageID != element.MessageID).Reverse())
                     {
                         token.ThrowIfCancellationRequested();
-                        MessageEvent?.Invoke(message);
+                        if (element is ChatMessage message) MessageEvent?.Invoke(message);
+                        else if (element is ChatSponsor sponsor) SponsorEvent?.Invoke(sponsor);
                     }
                     errors = 0;
                     lastMessageID = firstMessageID ?? lastMessageID;
@@ -79,6 +81,7 @@ namespace LimeYoutubeAPI.Live
             try { canceller.Cancel(); } catch { }
             Ext.UnregAll(ref MessageEvent);
             Ext.UnregAll(ref StateEvent);
+            Ext.UnregAll(ref SponsorEvent);
         }
     }
 }

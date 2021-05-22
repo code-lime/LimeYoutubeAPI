@@ -12,7 +12,7 @@ namespace LimeYoutubeAPI.Models
         private static readonly Random rnd = new Random((int)(DateTime.Now.Ticks % int.MaxValue));
         private static Uri GetURL(IPEndPoint ip) => new Uri($"http://{ip.Address}:{ip.Port}");
 
-        private List<WebProxy> ProxyList { get; } = new List<WebProxy>();
+        public List<WebProxy> ProxyList { get; } = new List<WebProxy>();
         private WebProxy RandomProxy => ProxyList[rnd.Next(ProxyList.Count)];
         public ProxyMozillaNet() { }
         public ProxyMozillaNet(Dictionary<IPEndPoint, NetworkCredential> proxyList)

@@ -29,15 +29,17 @@ namespace LimeYoutubeAPI.Live
         public ConcurrentDictionary<string, DataStream> YoutubeStreams { get; } = new ConcurrentDictionary<string, DataStream>();
         internal MultiChatListener(YoutubeService service) => this.service = service;
         public event Action<string, ChatMessage> MessageEvent;
+        public event Action<string, ChatSponsor> SponsorEvent;
         public event Action<string, ChatState> StateEvent;
         public Task Run(TimeSpan? update = null) => RunMultiTask(update ?? YoutubeService.DefaultUpdate, canceller.Token);
-        public void RegisterVideo(string videoID, Action<ChatMessage> messageEvent = null, Action<ChatState> stateEvent = null)
+        public void RegisterVideo(string videoID, Action<ChatMessage> messageEvent = null, Action<ChatSponsor> sponsorEvent = null, Action<ChatState> stateEvent = null)
         {
             if (messageEvent != null) MessageEvent += (id, msg) => { if (id == videoID) messageEvent.Invoke(msg); };
             if (stateEvent != null) StateEvent += (id, msg) => { if (id == videoID) stateEvent.Invoke(msg); };
+            if (sponsorEvent != null) SponsorEvent += (id, msg) => { if (id == videoID) sponsorEvent.Invoke(msg); };
             YoutubeStreams[videoID] = null;
         }
-        public async Task RegisterChannel(string channelID, Action<ChatMessage> messageEvent = null, Action<ChatState> stateEvent = null)
+        public async Task RegisterChannel(string channelID, Action<ChatMessage> messageEvent = null, Action<ChatSponsor> sponsorEvent = null, Action<ChatState> stateEvent = null)
         {
             YoutubeChannel channel = await service.GetChannelAsync(channelID);
             if (channel.StreamID == null)
@@ -45,7 +47,7 @@ namespace LimeYoutubeAPI.Live
                 stateEvent?.Invoke(new ChatState(404, "Stream not founded"));
                 return;
             }
-            RegisterVideo(channel.StreamID, messageEvent, stateEvent);
+            RegisterVideo(channel.StreamID, messageEvent, sponsorEvent, stateEvent);
         }
         private async Task RunMultiTask(TimeSpan updateTimeout, CancellationToken token)
         {
@@ -90,20 +92,21 @@ namespace LimeYoutubeAPI.Live
                             }
                             await Task.Delay(updateTimeout);
                             token.ThrowIfCancellationRequested();
-                            string firstMessageID = null;
-                            IEnumerable<ChatMessage> messages = await service.GetChatMessages(dataStream.LiveChat.FullLiveChat);
-                            if (messages == null)
+                            string firstElementID = null;
+                            IEnumerable<IChatElement> elements = await service.GetChatElements(dataStream.LiveChat.FullLiveChat);
+                            if (elements == null)
                             {
                                 dataStream.errors++;
                                 continue;
                             }
-                            foreach (var message in messages.Where(message => { if (dataStream.lastMessageID == null && message.UtcTime < dataStream.utcInit) return false; if (firstMessageID == null) firstMessageID = message.MessageID; return true; }).TakeWhile(message => dataStream.lastMessageID != message.MessageID).Reverse())
+                            foreach (var element in elements.Where(element => { if (dataStream.lastMessageID == null && element.UtcTime < dataStream.utcInit) return false; if (firstElementID == null) firstElementID = element.MessageID; return true; }).TakeWhile(element => dataStream.lastMessageID != element.MessageID).Reverse())
                             {
                                 token.ThrowIfCancellationRequested();
-                                MessageEvent?.Invoke(videoID, message);
+                                if (element is ChatMessage message) MessageEvent?.Invoke(videoID, message);
+                                else if (element is ChatSponsor sponsor) SponsorEvent?.Invoke(videoID, sponsor);
                             }
                             dataStream.errors = 0;
-                            dataStream.lastMessageID = firstMessageID ?? dataStream.lastMessageID;
+                            dataStream.lastMessageID = firstElementID ?? dataStream.lastMessageID;
                         }
                         catch (Exception e)
                         {
@@ -122,6 +125,7 @@ namespace LimeYoutubeAPI.Live
         {
             try { canceller.Cancel(); } catch { }
             Ext.UnregAll(ref MessageEvent);
+            Ext.UnregAll(ref SponsorEvent);
             Ext.UnregAll(ref StateEvent);
         }
     }

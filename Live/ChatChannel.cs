@@ -13,7 +13,7 @@ namespace LimeYoutubeAPI.Live
         public override string AvatarID { get; }
         public virtual ChannelType Type { get; }
 
-        internal ChatChannel(string channelID, string userName, string avatarID, ChannelType type)
+        public ChatChannel(string channelID, string userName, string avatarID, ChannelType type)
         {
             ChannelID = channelID;
             UserName = userName;

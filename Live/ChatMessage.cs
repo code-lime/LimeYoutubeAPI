@@ -1,22 +1,14 @@
-﻿using System;
+﻿using Newtonsoft.Json.Linq;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
 namespace LimeYoutubeAPI.Live
 {
-    public class ChatMessage
+    public class ChatMessage : IChatElement
     {
-        public ChatChannel Author { get; }
         public string Context { get; }
-        public DateTime UtcTime { get; }
-        public string MessageID { get; }
-
-        internal ChatMessage(ChatChannel author, string context, DateTime utcTime, string messageID)
-        {
-            Author = author;
-            Context = context;
-            UtcTime = utcTime;
-            MessageID = messageID;
-        }
+        public ChatMessage(ChatChannel author, string context, DateTime utcTime, string messageID) : base(author, utcTime, messageID) => Context = context;
+        internal ChatMessage(JToken json) : base(json) => Context = json["message"]["runs"][0]["text"].Value<string>();
     }
 }

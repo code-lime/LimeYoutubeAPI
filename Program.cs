@@ -16,9 +16,8 @@ namespace LimeYoutubeAPI
             using (YoutubeService service = YoutubeService.Create())
             using (MultiChatListener listener = service.CreateMultiChatListener())
             {
-                var v = service.GetVideoIDAsync(new Uri("https://youtu.be/HfaazBDA8aE")).Result;
-                listener.RegisterChannel("UCwKfmsba1g3SDcOzbU4zPXw", v => Listener_MessageEvent("ФУГА TV", v), v => Listener_StateEvent("ФУГА TV", v)).Wait();
-                listener.RegisterChannel("UC0rdUtnXyfzgQQz25wrkbSQ", v => Listener_MessageEvent("TEMP", v), v => Listener_StateEvent("TEMP", v)).Wait();
+                listener.RegisterChannel("UCwKfmsba1g3SDcOzbU4zPXw", v => Listener_MessageEvent("ФУГА TV", v), v => Listener_SponsorEvent("ФУГА TV", v), v => Listener_StateEvent("ФУГА TV", v)).Wait();
+                //listener.RegisterChannel("UC0rdUtnXyfzgQQz25wrkbSQ", v => Listener_MessageEvent("TEMP", v), v => Listener_StateEvent("TEMP", v)).Wait();
                 Task.WaitAll(listener.Run());
                 /*ChatListener listener = await service.RunChatByChannel("UCwKfmsba1g3SDcOzbU4zPXw");
                 if (listener == null) return;
@@ -33,7 +32,12 @@ namespace LimeYoutubeAPI
 
         private static void Listener_MessageEvent(string prefix, ChatMessage obj)
         {
-            Console.WriteLine($"[{prefix}] [{obj.UtcTime.ToString("dd.MM.yyyy HH:mm:ss")}] {obj.Author.UserName}: {obj.Context}");
+            //Console.WriteLine($"[{prefix}] [{obj.UtcTime.ToString("dd.MM.yyyy HH:mm:ss")}] {obj.Author.UserName}: {obj.Context}");
+        }
+        
+        private static void Listener_SponsorEvent(string prefix, ChatSponsor obj)
+        {
+            Console.WriteLine($"[{prefix}] [SPONSOR] [{obj.UtcTime.ToString("dd.MM.yyyy HH:mm:ss")}] {obj.Author.UserName}");
         }
 
         private static void Listener_StateEvent(string prefix, ChatState obj)

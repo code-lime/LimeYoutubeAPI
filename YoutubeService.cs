@@ -47,6 +47,21 @@ namespace LimeYoutubeAPI
             var result = JObject.Parse(text);
             return result;
         }
+        internal async Task<JObject> GetYoutubeInitial(Uri youtubeURL) {
+            const string end = ";var ";
+            const string begin = "var ytInitialPlayerResponse = ";
+
+            IResponse response = await GetYoutubeResponse(youtubeURL);
+            if (response.Code != HttpStatusCode.OK) return null;
+            string html = response.Data;
+            var indxStart = html.IndexOf(begin) + begin.Length;
+
+            var indxEnd = html.IndexOf(end, indxStart);
+            var text = html[indxStart..indxEnd];
+            var result = JObject.Parse(text);
+            return result;
+            //ytInitialPlayerResponse 
+        }
         internal async Task<JArray> GetChatMessagesData(Uri liveChatURL)
         {
             JObject json = await GetYoutubeData(liveChatURL);
@@ -81,7 +96,7 @@ namespace LimeYoutubeAPI
         {
             try
             {
-                JObject json = await GetYoutubeData(YoutubeURL.GetVideoInfo(videoID));
+                JObject json = await GetYoutubeInitial(YoutubeURL.GetVideo(videoID));
                 if (json == null) return null;
                 JObject videoDetails = (JObject)json["videoDetails"];
                 if (videoDetails == null) return null;
@@ -133,53 +148,32 @@ namespace LimeYoutubeAPI
             return new YoutubeLiveChatInfo(YoutubeURL.GetLiveChatContinuation(idFull), YoutubeURL.GetLiveChatContinuation(idFilter));
         }
 
-        private IEnumerable<ChatMessage> getChatMessages(JArray chatMessages)
+        private IEnumerable<IChatElement> getChatElements(JArray chatMessages)
         {
             foreach (JObject item in chatMessages.Reverse())
             {
-                ChatMessage msg;
+                IChatElement msg;
                 try
                 {
                     if (!item.TryGetValue("addChatItemAction", out JToken chatItem)) continue;
-                    chatItem = chatItem["item"]["liveChatTextMessageRenderer"];
-                    if (chatItem == null) continue;
-
-                    string message = chatItem["message"]["runs"][0]["text"].Value<string>();
-                    string authorName = chatItem["authorName"]?["simpleText"]?.Value<string>() ?? "Unknown";
-                    string authorIcon = chatItem["authorPhoto"]?["thumbnails"]?.Last?["url"]?.Value<string>();
-                    string authorID = chatItem["authorExternalChannelId"].Value<string>();
-                    string messageID = chatItem["id"].Value<string>();
-                    long value = chatItem["timestampUsec"].Value<long>() / 1000;
-                    DateTime utcTime = DateTimeOffset.FromUnixTimeMilliseconds(value).UtcDateTime;
-                    ChannelType authorType = ChannelType.None;
-                    foreach (var jbd in chatItem["authorBadges"]?.ToObject<JArray>() ?? new JArray())
-                    {
-                        JObject jjbd = jbd["liveChatAuthorBadgeRenderer"]?.ToObject<JObject>();
-                        if (jjbd != null && jjbd.TryGetValue("icon", out JToken icon))
-                        {
-                            switch (icon?["iconType"]?.Value<string>())
-                            {
-                                case "VERIFIED": authorType |= ChannelType.Verified; break;
-                                case "MODERATOR": authorType |= ChannelType.Moderator; break;
-                                case "OWNER": authorType |= ChannelType.Owner; break;
-                                default: authorType |= ChannelType.Other; break;
-                            }
-                        }
-                        else authorType |= ChannelType.Sponsor;
-                    }
-                    authorIcon = authorIcon?[(authorIcon.LastIndexOf('/') + 1)..authorIcon.IndexOf('=')];
-                    msg = new ChatMessage(new ChatChannel(authorID, authorName, authorIcon, authorType), message, utcTime, messageID);
+                    JObject _item = (JObject)chatItem["item"];
+                    if (_item == null) continue;
+                    if (_item.TryGetValue("liveChatTextMessageRenderer", out chatItem))
+                        msg = new ChatMessage(chatItem);
+                    else if (_item.TryGetValue("liveChatMembershipItemRenderer", out chatItem))
+                        msg = new ChatSponsor(chatItem);
+                    else continue;
                 }
                 catch { continue; }
                 yield return msg;
             }
         }
-        public async Task<IEnumerable<ChatMessage>> GetChatMessages(Uri liveChat)
+        public async Task<IEnumerable<IChatElement>> GetChatElements(Uri liveChat)
         {
             try
             {
                 JArray chatMessages = await GetChatMessagesData(liveChat);
-                return chatMessages == null ? null : getChatMessages(chatMessages);
+                return chatMessages == null ? null : getChatElements(chatMessages);
             }
             catch
             {
