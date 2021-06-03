@@ -5,19 +5,19 @@ using System.Text;
 
 namespace LimeYoutubeAPI.Live
 {
-    public class IChatElement
+    public class BaseChatElement
     {
         public ChatChannel Author { get; }
         public DateTime UtcTime { get; }
         public string MessageID { get; }
 
-        public IChatElement(ChatChannel author, DateTime utcTime, string messageID)
+        public BaseChatElement(ChatChannel author, DateTime utcTime, string messageID)
         {
             Author = author;
             UtcTime = utcTime;
             MessageID = messageID;
         }
-        internal IChatElement(JToken json) : this(getChatChannel(json), getChatUtcTime(json), getChatMessageID(json)) { }
+        internal BaseChatElement(JToken json) : this(getChatChannel(json), getChatUtcTime(json), getChatMessageID(json)) { }
 
         private static string getChatMessageID(JToken chatItem) => chatItem["id"].Value<string>();
         private static DateTime getChatUtcTime(JToken chatItem)

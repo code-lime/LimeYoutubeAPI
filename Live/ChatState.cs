@@ -14,5 +14,10 @@ namespace LimeYoutubeAPI.Live
             Code = code;
             Data = data;
         }
+
+        public override string ToString()
+        {
+            return $"{Code}: {Data}";
+        }
     }
 }

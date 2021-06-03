@@ -54,7 +54,7 @@ namespace LimeYoutubeAPI.Live
                     await Task.Delay(updateTimeout, token);
                     token.ThrowIfCancellationRequested();
                     string firstMessageID = null;
-                    IEnumerable<IChatElement> elements = await service.GetChatElements(liveChatInfo.FullLiveChat);
+                    IEnumerable<BaseChatElement> elements = await service.GetChatElements(liveChatInfo.FullLiveChat);
                     if (elements == null)
                     {
                         errors++;
