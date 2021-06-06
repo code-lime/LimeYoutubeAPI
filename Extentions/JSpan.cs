@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
+using System.Runtime.InteropServices;
 
 namespace LimeYoutubeAPI
 {
@@ -26,6 +27,7 @@ namespace LimeYoutubeAPI
             Set = set;
         }
 
+        public static JSpan Parse(ReadOnlySpan<char> set) => new JSpan(set);
         public static implicit operator ReadOnlySpan<char>(JSpan span) => span.Set;
         public static implicit operator JSpan(ReadOnlySpan<char> span) => new JSpan(span);
         public static implicit operator bool(JSpan span) => span.IsEmpty;
@@ -62,8 +64,8 @@ namespace LimeYoutubeAPI
             if (!IsArray) return default;
             if (indx < 0) throw new IndexOutOfRangeException($"{indx} cant be less the zero");
 
-            var startObjIndx = 1;
-            var objLength = 0;
+            int startObjIndx = 1;
+            int objLength;
             for (int i = 0; i < indx; i++)
             {
                 if (startObjIndx >= Set.Length - 1) return default;
@@ -80,7 +82,7 @@ namespace LimeYoutubeAPI
             var separator = ChooseSeparate(Set[startIndx]);
             if (separator is null) return -1;
 
-            var area = Set.Slice(startIndx + 1, Set.Length - startIndx - 1);
+            var area = Set.Slice(startIndx + 1);
 
             if (!separator.IsDeptSearch)
             {
@@ -100,7 +102,7 @@ namespace LimeYoutubeAPI
 
             while (dept != 0)
             {
-                var closeIndx = area[startSearchIndx..(area.Length - 1)].IndexOf(separator.Close) + startSearchIndx;
+                var closeIndx = area[startSearchIndx..].IndexOf(separator.Close) + startSearchIndx;
                 if (closeIndx == -1) return -1;
 
                 var newOpenIndx = area[startSearchIndx..closeIndx].IndexOf(separator.Open) + startSearchIndx;

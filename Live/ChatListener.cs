@@ -18,6 +18,10 @@ namespace LimeYoutubeAPI.Live
         public event Action<ChatSponsor> SponsorEvent;
         public event Action<ChatState> StateEvent;
         public Task Run(string videoID, TimeSpan? update = null) => RunTask(update ?? YoutubeService.DefaultUpdate, videoID, canceller.Token);
+        public void Stop()
+        {
+            try { canceller.Cancel(); } catch { }
+        }
         private async Task RunTask(TimeSpan updateTimeout, string videoID, CancellationToken token)
         {
             try
