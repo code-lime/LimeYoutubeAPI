@@ -18,6 +18,10 @@ namespace LimeYoutubeAPI.Live
         public event Action<ChatSponsor> SponsorEvent;
         public event Action<ChatState> StateEvent;
         public Task Run(string videoID, TimeSpan? update = null) => RunTask(update ?? YoutubeService.DefaultUpdate, videoID, canceller.Token);
+        public void Stop()
+        {
+            try { canceller.Cancel(); } catch { }
+        }
         private async Task RunTask(TimeSpan updateTimeout, string videoID, CancellationToken token)
         {
             try
@@ -54,7 +58,7 @@ namespace LimeYoutubeAPI.Live
                     await Task.Delay(updateTimeout, token);
                     token.ThrowIfCancellationRequested();
                     string firstMessageID = null;
-                    IEnumerable<IChatElement> elements = await service.GetChatElements(liveChatInfo.FullLiveChat);
+                    IEnumerable<BaseChatElement> elements = await service.GetChatElements(liveChatInfo.FullLiveChat);
                     if (elements == null)
                     {
                         errors++;

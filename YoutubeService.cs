@@ -92,6 +92,7 @@ namespace LimeYoutubeAPI
                 return null;
             }
         }
+
         public async Task<YoutubeVideo> GetVideoAsync(string videoID)
         {
             try
@@ -148,11 +149,11 @@ namespace LimeYoutubeAPI
             return new YoutubeLiveChatInfo(YoutubeURL.GetLiveChatContinuation(idFull), YoutubeURL.GetLiveChatContinuation(idFilter));
         }
 
-        private IEnumerable<IChatElement> getChatElements(JArray chatMessages)
+        private IEnumerable<BaseChatElement> getChatElements(JArray chatMessages)
         {
             foreach (JObject item in chatMessages.Reverse())
             {
-                IChatElement msg;
+                BaseChatElement msg;
                 try
                 {
                     if (!item.TryGetValue("addChatItemAction", out JToken chatItem)) continue;
@@ -168,7 +169,7 @@ namespace LimeYoutubeAPI
                 yield return msg;
             }
         }
-        public async Task<IEnumerable<IChatElement>> GetChatElements(Uri liveChat)
+        public async Task<IEnumerable<BaseChatElement>> GetChatElements(Uri liveChat)
         {
             try
             {
