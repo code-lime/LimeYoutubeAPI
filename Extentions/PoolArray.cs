@@ -11,7 +11,7 @@ namespace LimeYoutubeAPI
         private T[] buffer;
         public int Length { get; private set; }
         public int Count { get; private set; } = 2;
-        const int MaxSize = (int.MaxValue - 1) / 2;
+        const int MAX_SIZE = (int.MaxValue - 1) / 2;
 
         public PoolArray()
         {
@@ -23,14 +23,16 @@ namespace LimeYoutubeAPI
         }
         private void SetSize(int newLength)
         {
+            if (newLength < 0) throw new ArgumentException($"{newLength} cant be less the zero");
+
             if (Count < newLength)
             {
-                if (newLength > int.MaxValue)
-                {
-                    throw new OutOfMemoryException($"{newLength} bigger then {int.MaxValue}");
-                }
+                //if (newLength > int.MaxValue)
+                //{
+                //    throw new OutOfMemoryException($"{newLength} bigger then {int.MaxValue}");
+                //}
 
-                if (newLength > MaxSize & newLength <= int.MaxValue)
+                if (newLength > MAX_SIZE /* & newLength <= int.MaxValue*/)
                 {
                     Count = int.MaxValue;
                 }
@@ -38,7 +40,7 @@ namespace LimeYoutubeAPI
                 {
                     while (Count < newLength)
                     {
-                        Count = Count << 1;
+                        Count <<= 1;
                     }
                 }
 
@@ -56,7 +58,7 @@ namespace LimeYoutubeAPI
             int length = 2;
             while (length < Length)
             {
-                length = length << 1;
+                length <<= 1;
             }
 
             Count = length;

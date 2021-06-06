@@ -14,10 +14,18 @@ namespace LimeYoutubeAPI.Models
         protected virtual HttpClient Client => new HttpClient();
         public virtual async Task<IResponse> GetAsync(Uri url)
         {
+
+            var buff = new PoolArray<byte>();
+
             using HttpClient client = Client;
             client.DefaultRequestHeaders.UserAgent.ParseAdd(MozillaAgent);
             using HttpResponseMessage response = await client.GetAsync(url);
             if (response.StatusCode != System.Net.HttpStatusCode.OK) return new Response(response.StatusCode, null);
+
+            var stream = response.Content.ReadAsStreamAsync().Result;
+
+            stream.Read(buff.Write((int)stream.Length), 0, (int)stream.Length);
+
             string html = await response.Content.ReadAsStringAsync();
             return new Response(response.StatusCode, html);
         }
