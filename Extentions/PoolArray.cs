@@ -2,6 +2,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using System.Runtime.InteropServices;
 
 namespace LimeYoutubeAPI
 {
@@ -11,7 +12,7 @@ namespace LimeYoutubeAPI
         private T[] buffer;
         public int Length { get; private set; }
         public int Count { get; private set; } = 2;
-        const int MAX_SIZE = (int.MaxValue - 1) / 2;
+        private const int MAX_SIZE = (int.MaxValue - 1) / 2;
 
         public PoolArray()
         {
@@ -27,12 +28,7 @@ namespace LimeYoutubeAPI
 
             if (Count < newLength)
             {
-                //if (newLength > int.MaxValue)
-                //{
-                //    throw new OutOfMemoryException($"{newLength} bigger then {int.MaxValue}");
-                //}
-
-                if (newLength > MAX_SIZE /* & newLength <= int.MaxValue*/)
+                if (newLength > MAX_SIZE)
                 {
                     Count = int.MaxValue;
                 }

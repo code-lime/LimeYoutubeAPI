@@ -3,6 +3,9 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.Json;
 using System.Runtime.InteropServices;
+using System.Runtime.CompilerServices;
+
+using System.Collections.Immutable;
 
 namespace LimeYoutubeAPI
 {
@@ -21,6 +24,7 @@ namespace LimeYoutubeAPI
         private static readonly JSONSeparator OBJECT = new JSONSeparator('{', '}', true);
         private static readonly JSONSeparator ARRAY = new JSONSeparator('[', ']', true);
         private static readonly JSONSeparator VALUE = new JSONSeparator('"', '"', false);
+        private static readonly ImmutableHashSet<char> MANAGE_CONSTRUCT = new[] { '\r', ' ', '\n', '\a', '\b', '\f', '\t', ',' }.ToImmutableHashSet();
 
         public JSpan(ReadOnlySpan<char> set)
         {
@@ -44,6 +48,8 @@ namespace LimeYoutubeAPI
             return JsonSerializer.Deserialize<T>(buffer);
         }
 
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private JSpan FindByKey(ReadOnlySpan<char> key)
         {
             if (!IsObject) return default;
@@ -51,7 +57,15 @@ namespace LimeYoutubeAPI
             var indx = Set.IndexOf(key);
             if (indx == -1) return default;
 
-            var resultSenseStartIndx = indx + key.Length + BETWEN_KEY_AND_SENSE.Length;
+            var resultSenseStartIndx = indx + key.Length;
+
+            resultSenseStartIndx = SearchKeyEnd(resultSenseStartIndx);
+            if (resultSenseStartIndx == -1) return default;
+            else resultSenseStartIndx++;
+
+            resultSenseStartIndx = SearchSenseBeganIndx(resultSenseStartIndx);
+            if (resultSenseStartIndx == -1) return default;
+
             var resultLength = SearchSenseLength(resultSenseStartIndx);
 
             if (resultLength == -1) return default;
@@ -59,28 +73,87 @@ namespace LimeYoutubeAPI
             return new JSpan(Set.Slice(resultSenseStartIndx, resultLength));
         }
 
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private JSpan FindByObjectIndex(int indx)
         {
             if (!IsArray) return default;
             if (indx < 0) throw new IndexOutOfRangeException($"{indx} cant be less the zero");
 
-            int startObjIndx = 1;
-            int objLength;
-            for (int i = 0; i < indx; i++)
+            int startObjIndx = 0;
+            int objLength = 1;
+            int indxCounter = -1;
+
+            do
             {
-                if (startObjIndx >= Set.Length - 1) return default;
+                indxCounter++;
+
+                startObjIndx = SearchSenseBeganIndx(startObjIndx + objLength);
+                if (startObjIndx == -1) return default;
+
                 objLength = SearchSenseLength(startObjIndx);
-                startObjIndx += objLength + 1;
+                if (objLength == -1) return default;
             }
-            if (startObjIndx >= Set.Length) return default;
-            objLength = SearchSenseLength(startObjIndx);
+            while (indxCounter != indx);
+
             return new JSpan(Set.Slice(startObjIndx, objLength));
+        }
+
+
+        private int SearchKeyEnd(int startSearchIndx)
+        {
+            var secondPartFlag = false;
+
+            for (int i = startSearchIndx; i < Set.Length; i++)
+            {
+                var val = Set[i];
+
+                if (MANAGE_CONSTRUCT.Contains(val)) continue;
+
+                if (secondPartFlag)
+                {
+                    if (val == BETWEN_KEY_AND_SENSE[1])
+                    {
+                        return i;
+                    }
+                    else
+                    {
+                        return -1;
+                    }
+                }
+                else
+                {
+                    if (val == BETWEN_KEY_AND_SENSE[0])
+                    {
+                        secondPartFlag = true;
+                    }
+                    else
+                    {
+                        return -1;
+                    }
+                }
+            }
+            return -1;
+        }
+
+        private int SearchSenseBeganIndx(int startSearchIndx)
+        {
+            for (int i = startSearchIndx; i < Set.Length; i++)
+            {
+                var val = Set[i];
+
+                if (MANAGE_CONSTRUCT.Contains(val)) continue;
+
+                if (ChooseSeparate(val) == null) return -1;
+                else return i;
+            }
+            return -1;
         }
 
         private int SearchSenseLength(int startIndx)
         {
             var separator = ChooseSeparate(Set[startIndx]);
-            if (separator is null) return -1;
+            if (separator == null) return -1;
 
             var area = Set.Slice(startIndx + 1);
 
