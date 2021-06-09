@@ -17,26 +17,31 @@ namespace LimeYoutubeAPI.Live
             UtcTime = utcTime;
             MessageID = messageID;
         }
-        internal BaseChatElement(JToken json) : this(getChatChannel(json), getChatUtcTime(json), getChatMessageID(json)) { }
+        internal BaseChatElement(JSpan json) : this(getChatChannel(json), getChatUtcTime(json), getChatMessageID(json)) { }
 
-        private static string getChatMessageID(JToken chatItem) => chatItem["id"].Value<string>();
-        private static DateTime getChatUtcTime(JToken chatItem)
+        private static string getChatMessageID(JSpan chatItem) => chatItem["id"].AsStringValue();
+        private static DateTime getChatUtcTime(JSpan chatItem)
         {
-            long value = chatItem["timestampUsec"].Value<long>() / 1000;
+            long value = long.Parse(chatItem["timestampUsec"].AsStringValue()) / 1000;
             return DateTimeOffset.FromUnixTimeMilliseconds(value).UtcDateTime;
         }
-        private static ChatChannel getChatChannel(JToken chatItem)
+        private static ChatChannel getChatChannel(JSpan chatItem)
         {
-            string authorName = chatItem["authorName"]?["simpleText"]?.Value<string>() ?? "Unknown";
-            string authorIcon = chatItem["authorPhoto"]?["thumbnails"]?.Last?["url"]?.Value<string>();
-            string authorID = chatItem["authorExternalChannelId"].Value<string>();
+            var _authorName = chatItem["authorName"]["simpleText"];
+            string authorName = _authorName.IsEmpty ? "Unknown" : _authorName.AsStringValue();
+            ReadOnlySpan<char> authorIcon = chatItem["authorPhoto"]["thumbnails"].GetEnumerator().GetLast()["url"];
+            string authorID = chatItem["authorExternalChannelId"].AsStringValue();
             ChannelType authorType = ChannelType.None;
-            foreach (var jbd in chatItem["authorBadges"]?.ToObject<JArray>() ?? new JArray())
+
+            var authorBadges = chatItem["authorBadges"].GetEnumerator();
+            while (authorBadges.MoveNext())
             {
-                JObject jjbd = jbd["liveChatAuthorBadgeRenderer"]?.ToObject<JObject>();
-                if (jjbd != null && jjbd.TryGetValue("icon", out JToken icon))
+                var jbd = authorBadges.Current;
+                var jjbd = jbd["liveChatAuthorBadgeRenderer"];
+                var jjbdIcon = jjbd["icon"];
+                if (!(jjbd.IsEmpty||jjbdIcon.IsEmpty))
                 {
-                    switch (icon?["iconType"]?.Value<string>())
+                    switch (jjbdIcon["iconType"].AsStringValue())
                     {
                         case "VERIFIED": authorType |= ChannelType.Verified; break;
                         case "MODERATOR": authorType |= ChannelType.Moderator; break;
@@ -46,8 +51,9 @@ namespace LimeYoutubeAPI.Live
                 }
                 else authorType |= ChannelType.Sponsor;
             }
-            authorIcon = authorIcon?[(authorIcon.LastIndexOf('/') + 1)..authorIcon.IndexOf('=')];
-            return new ChatChannel(authorID, authorName, authorIcon, authorType);
+
+            authorIcon = authorIcon[(authorIcon.LastIndexOf('/') + 1)..authorIcon.IndexOf('=')];
+            return new ChatChannel(authorID, authorName, authorIcon.ToString(), authorType);
         }
     }
 }

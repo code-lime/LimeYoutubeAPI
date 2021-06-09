@@ -7,6 +7,7 @@ namespace LimeYoutubeAPI.Interfaces
 {
     public interface INet : IDisposable
     {
-        Task<IResponse> GetAsync(Uri url);
+        Task<System.Net.HttpStatusCode> GetAsync(Uri url, IBuffer<byte> writeOnlyUTF8Buffer);
+        Encoding Encoding { get; }
     }
 }

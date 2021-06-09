@@ -11,7 +11,7 @@ namespace LimeYoutubeAPI.Live
 {
     public class MultiChatListener : IDisposable
     {
-        private readonly YoutubeService service;
+        private readonly YoutubeContext service;
         private readonly CancellationTokenSource canceller = new CancellationTokenSource();
         public class DataStream
         {
@@ -27,7 +27,7 @@ namespace LimeYoutubeAPI.Live
             }
         }
         public ConcurrentDictionary<string, DataStream> YoutubeStreams { get; } = new ConcurrentDictionary<string, DataStream>();
-        internal MultiChatListener(YoutubeService service) => this.service = service;
+        internal MultiChatListener(YoutubeContext service) => this.service = service;
         public event Action<string, ChatMessage> MessageEvent;
         public event Action<string, ChatSponsor> SponsorEvent;
         public event Action<string, ChatState> StateEvent;
@@ -73,7 +73,7 @@ namespace LimeYoutubeAPI.Live
                                     if (YoutubeStreams.TryRemove(videoID, out _)) StateEvent?.Invoke(videoID, new ChatState(404, video == null ? "Video info not founded" : "Stream info not founded"));
                                     continue;
                                 }
-                                YoutubeLiveChatInfo liveChatInfo = await service.GetLiveChatInfo(videoID);
+                                YoutubeLiveChatInfo liveChatInfo = await service.GetLiveChatInfoAsync(videoID);
                                 token.ThrowIfCancellationRequested();
                                 if (liveChatInfo == null)
                                 {
@@ -93,7 +93,7 @@ namespace LimeYoutubeAPI.Live
                             await Task.Delay(updateTimeout);
                             token.ThrowIfCancellationRequested();
                             string firstElementID = null;
-                            IEnumerable<BaseChatElement> elements = await service.GetChatElements(dataStream.LiveChat.FullLiveChat);
+                            IEnumerable<BaseChatElement> elements = await service.GetChatElementsAsync(dataStream.LiveChat.FullLiveChat);
                             if (elements == null)
                             {
                                 dataStream.errors++;

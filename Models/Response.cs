@@ -6,15 +6,15 @@ using System.Text;
 
 namespace LimeYoutubeAPI.Models
 {
-    public class Response : IResponse
-    {
-        public HttpStatusCode Code { get; }
-        public string Data { get; }
+    //public class Response : IResponse
+    //{
+    //    public HttpStatusCode Code { get; }
+    //    public string Data { get; }
 
-        public Response(System.Net.HttpStatusCode code, string data)
-        {
-            Code = code;
-            Data = data;
-        }
-    }
+    //    public Response(System.Net.HttpStatusCode code, string data)
+    //    {
+    //        Code = code;
+    //        Data = data;
+    //    }
+    //}
 }

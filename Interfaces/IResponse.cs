@@ -4,9 +4,9 @@ using System.Text;
 
 namespace LimeYoutubeAPI.Interfaces
 {
-    public interface IResponse
-    {
-        System.Net.HttpStatusCode Code { get; }
-        string Data { get; }
-    }
+    //public interface IResponse
+    //{
+    //    System.Net.HttpStatusCode Code { get; }
+    //    string Data { get; }
+    //}
 }

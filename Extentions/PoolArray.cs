@@ -3,10 +3,11 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
+using LimeYoutubeAPI.Interfaces;
 
 namespace LimeYoutubeAPI
 {
-    public class PoolArray<T>
+    public class PoolArray<T> : IBuffer<T>
         where T : unmanaged
     {
         private T[] buffer;
@@ -62,6 +63,13 @@ namespace LimeYoutubeAPI
             {
                 buffer = new T[length];
             }
+        }
+
+        public void Clear()
+        {
+            Length = 0;
+            Count = 2;
+            buffer = new T[Count];
         }
 
         public unsafe T* WriteByPointer(int length)

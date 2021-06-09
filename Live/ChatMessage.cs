@@ -9,7 +9,7 @@ namespace LimeYoutubeAPI.Live
     {
         public string Context { get; }
         public ChatMessage(ChatChannel author, string context, DateTime utcTime, string messageID) : base(author, utcTime, messageID) => Context = context;
-        internal ChatMessage(JToken json) : base(json) => Context = json["message"]["runs"][0]["text"].Value<string>();
+        internal ChatMessage(JSpan json) : base(json) => Context = json["message"]["runs"][0]["text"].AsStringValue();
 
         public override string ToString()
         {

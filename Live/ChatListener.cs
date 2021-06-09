@@ -10,10 +10,10 @@ namespace LimeYoutubeAPI.Live
 {
     public class ChatListener : IDisposable
     {
-        private readonly YoutubeService service;
+        private readonly YoutubeContext service;
         private readonly CancellationTokenSource canceller = new CancellationTokenSource();
         public YoutubeStream YoutubeStream { get; private set; }
-        internal ChatListener(YoutubeService service) => this.service = service;
+        internal ChatListener(YoutubeContext service) => this.service = service;
         public event Action<ChatMessage> MessageEvent;
         public event Action<ChatSponsor> SponsorEvent;
         public event Action<ChatState> StateEvent;
@@ -33,7 +33,7 @@ namespace LimeYoutubeAPI.Live
                     StateEvent?.Invoke(new ChatState(404, video == null ? "Video info not founded" : "Stream info not founded"));
                     return;
                 }
-                YoutubeLiveChatInfo liveChatInfo = await service.GetLiveChatInfo(videoID);
+                YoutubeLiveChatInfo liveChatInfo = await service.GetLiveChatInfoAsync(videoID);
                 token.ThrowIfCancellationRequested();
                 if (liveChatInfo == null) {
                     StateEvent?.Invoke(new ChatState(404, "LiveChat not founded"));
@@ -58,7 +58,7 @@ namespace LimeYoutubeAPI.Live
                     await Task.Delay(updateTimeout, token);
                     token.ThrowIfCancellationRequested();
                     string firstMessageID = null;
-                    IEnumerable<BaseChatElement> elements = await service.GetChatElements(liveChatInfo.FullLiveChat);
+                    IEnumerable<BaseChatElement> elements = await service.GetChatElementsAsync(liveChatInfo.FullLiveChat);
                     if (elements == null)
                     {
                         errors++;

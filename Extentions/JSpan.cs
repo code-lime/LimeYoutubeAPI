@@ -34,18 +34,30 @@ namespace LimeYoutubeAPI
         public static JSpan Parse(ReadOnlySpan<char> set) => new JSpan(set);
         public static implicit operator ReadOnlySpan<char>(JSpan span) => span.Set;
         public static implicit operator JSpan(ReadOnlySpan<char> span) => new JSpan(span);
-        public static implicit operator bool(JSpan span) => span.IsEmpty;
+        //public static bool operator ==(JSpan obj, ReadOnlySpan<char> arg) => obj.Set == arg;
+        //public static bool operator !=(JSpan obj, ReadOnlySpan<char> arg) => obj.Set != arg;
+        //public static bool operator ==(JSpan obj, JSpan arg) => obj.Set == arg.Set;
+        //public static bool operator !=(JSpan obj, JSpan arg) => obj.Set != arg.Set;
 
         public JSpan this[ReadOnlySpan<char> key] => FindByKey(key);
         public JSpan this[int indx] => FindByObjectIndex(indx);
-        public string AsString() => new string(Set);
-        public string AsStringValue() => new string(Set[1..(Set.Length - 1)]);
+        public string AsString() => IsEmpty ? string.Empty : new string(Set);
+        public string AsStringValue() => Set.Length < 2 ? string.Empty : new string(Set[1..(Set.Length - 1)]);
         public T Deserialize<T>()
         {
             var encoding = Encoding.UTF8;
             Span<byte> buffer = stackalloc byte[encoding.GetByteCount(Set)];
             encoding.GetBytes(Set, buffer);
             return JsonSerializer.Deserialize<T>(buffer);
+        }
+
+        public JSpanEnumerator GetEnumerator()
+        {
+            return new JSpanEnumerator(this);
+        }
+        public JSpanReverseEnumerator GetReverseEnumerator()
+        {
+            return new JSpanReverseEnumerator(this);
         }
 
 

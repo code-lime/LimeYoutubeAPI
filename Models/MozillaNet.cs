@@ -1,6 +1,7 @@
 ﻿using LimeYoutubeAPI.Interfaces;
 using System;
 using System.Collections.Generic;
+using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
@@ -12,23 +13,24 @@ namespace LimeYoutubeAPI.Models
     {
         public virtual string MozillaAgent => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36";
         protected virtual HttpClient Client => new HttpClient();
-        public virtual async Task<IResponse> GetAsync(Uri url)
-        {
 
-            var buff = new PoolArray<byte>();
+        public Encoding Encoding => Encoding.UTF8;
+
+        public virtual async Task<HttpStatusCode> GetAsync(Uri url, IBuffer<byte> writeOnlyUTF8Buffer)
+        {
 
             using HttpClient client = Client;
             client.DefaultRequestHeaders.UserAgent.ParseAdd(MozillaAgent);
             using HttpResponseMessage response = await client.GetAsync(url);
-            if (response.StatusCode != System.Net.HttpStatusCode.OK) return new Response(response.StatusCode, null);
+            if (response.StatusCode != HttpStatusCode.OK) return response.StatusCode;
 
-            var stream = response.Content.ReadAsStreamAsync().Result;
+            var stream = await response.Content.ReadAsStreamAsync();
 
-            stream.Read(buff.Write((int)stream.Length), 0, (int)stream.Length);
+            stream.Read(writeOnlyUTF8Buffer.Write((int)stream.Length), 0, (int)stream.Length);
 
-            string html = await response.Content.ReadAsStringAsync();
-            return new Response(response.StatusCode, html);
+            return HttpStatusCode.OK;
         }
+
         public virtual void Dispose() { }
     }
 }
