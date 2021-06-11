@@ -14,7 +14,7 @@ namespace LimeYoutubeAPI
             var endIndx = source[startIndx..].IndexOf(endKey);
             if (endIndx == -1) return ReadOnlySpan<T>.Empty;
 
-            return source.Slice(startIndx, endIndx - startIndx);
+            return source.Slice(startIndx, endIndx);
         }
 
         public static ReadOnlySpan<T> TakeBetwen<T>(this ReadOnlySpan<T> source, T beganKey, T endKey) where T : IEquatable<T>
@@ -25,7 +25,7 @@ namespace LimeYoutubeAPI
             var endIndx = source[startIndx..].IndexOf(endKey);
             if (endIndx == -1) return ReadOnlySpan<T>.Empty;
 
-            return source.Slice(startIndx, endIndx - startIndx);
+            return source.Slice(startIndx, endIndx);
         }
     }
 }
