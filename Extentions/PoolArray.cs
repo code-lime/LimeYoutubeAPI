@@ -4,10 +4,11 @@ using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
 using LimeYoutubeAPI.Interfaces;
+using LimeYoutubeAPI.SpanParseSrc;
 
 namespace LimeYoutubeAPI
 {
-    public class PoolArray<T> : IBuffer<T>
+    public class PoolArray<T> : IBuffer<T>, MemoryHolder<T>
         where T : unmanaged
     {
         private T[] buffer;
@@ -23,7 +24,7 @@ namespace LimeYoutubeAPI
         {
             SetSize(initLength);
         }
-        private void SetSize(int newLength)
+        private void SetSize(int newLength, bool copy = false)
         {
             if (newLength < 0) throw new ArgumentException($"{newLength} cant be less the zero");
 
@@ -43,7 +44,12 @@ namespace LimeYoutubeAPI
 
                 if (buffer.Length != Count)
                 {
-                    buffer = new T[Count];
+                    var buff = new T[Count];
+                    if (copy)
+                    {
+                        buffer.CopyTo(buff, 0);
+                    }
+                    buffer = buff;
                 }
             }
 
@@ -70,6 +76,31 @@ namespace LimeYoutubeAPI
             Length = 0;
             Count = 2;
             buffer = new T[Count];
+        }
+
+        public T this[int indx]
+        {
+            get
+            {
+                IndexOutOfRangeExceptionCheck(indx);
+                return buffer[indx];
+            }
+            set
+            {
+                IndexOutOfRangeExceptionCheck(indx);
+                buffer[indx] = value;
+            }
+        }
+
+        private void IndexOutOfRangeExceptionCheck(int indx)
+        {
+            if (indx < 0 || indx > Length)
+            {
+                var excp = indx < 0 ?
+                new IndexOutOfRangeException($"{indx} less then zero") :
+                new IndexOutOfRangeException($"{indx} bigger then length({Length})");
+                throw excp;
+            }
         }
 
         public unsafe T* WriteByPointer(int length)
@@ -107,12 +138,37 @@ namespace LimeYoutubeAPI
         }
         public ReadOnlySpan<T> Read(int startIndx, int length)
         {
-            if (startIndx + length > Length) throw new IndexOutOfRangeException();
+            if (startIndx + length > Length) throw new ArgumentOutOfRangeException();
             return buffer.AsSpan().Slice(startIndx, length);
         }
         public ReadOnlySpan<T> Read(int startIndx)
         {
             return Read(startIndx, Length - startIndx);
+        }
+
+        public T GetByRef(int indx)
+        {
+            try
+            {
+                return this[indx];
+            }
+            catch
+            {
+                return default;
+            }
+        }
+
+        public int Add(T value)
+        {
+            var indx = Length;
+            SetSize(++Length, true);
+            this[indx] = value;
+            return indx;
+        }
+
+        public void Release()
+        {
+            Length = 0;
         }
     }
 }

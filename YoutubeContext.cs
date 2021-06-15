@@ -39,21 +39,11 @@ namespace LimeYoutubeAPI
 
             var readed = buffer.Read();
 
-            //          !!!!!!поправь логику!!!!!
-
-            //var indxStart = html.IndexOf(begin);
-
-            //if (indxStart == -1)
-            //{
-            //    indxStart = html.IndexOf(begin2);
-            //    if (indxStart == -1) return JObject.Parse(System.Web.HttpUtility.ParseQueryString(html).Get("player_response"));
-            //    indxStart += begin2.Length;
-            //}
-            //else indxStart += begin.Length;
-
-            //var indxEnd = html.IndexOf(end, indxStart);
-
             var text = readed.TakeBetwen(begin, end);
+            if (text.IsEmpty)
+            {
+                text = readed.TakeBetwen(begin2, end);
+            }
             var result = JSpan.Parse(text);
             return result;
         }
@@ -176,12 +166,15 @@ namespace LimeYoutubeAPI
         {
             var json = GetYoutubeData();
             var tempJson = json["continuationContents"]["liveChatContinuation"];
-            var arr = (tempJson.IsEmpty ? json["contents"]["liveChatRenderer"] : tempJson)
-                ["header"]
-                ["liveChatHeaderRenderer"]
-                ["viewSelector"]
-                ["sortFilterSubMenuRenderer"]
-                ["subMenuItems"];
+            var arr = (tempJson.IsEmpty ? json["contents"]["liveChatRenderer"] : tempJson);
+
+            arr = arr["header"];
+            tempJson = arr["liveChatHeaderRenderer"];
+            arr = tempJson.IsEmpty ? arr["liveChatBannerHeaderRenderer"] : tempJson;
+            arr = arr["viewSelector"];
+            arr = arr["sortFilterSubMenuRenderer"];
+            arr = arr["subMenuItems"];
+
             if (!arr.IsArray) return null;
             string idFilter = arr[0]["continuation"]["reloadContinuationData"]["continuation"].AsStringValue();
             string idFull = arr[1]["continuation"]["reloadContinuationData"]["continuation"].AsStringValue();

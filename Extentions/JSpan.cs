@@ -195,7 +195,9 @@ namespace LimeYoutubeAPI
                 {
                     newOpenIndx++;
                     dept++;
-                    newOpenIndx = area[newOpenIndx..closeIndx].IndexOf(separator.Open);
+                    var found = area[newOpenIndx..closeIndx].IndexOf(separator.Open);
+                    if (found == -1) break;
+                    newOpenIndx += found;
                 }
                 dept--;
                 startSearchIndx = closeIndx + 1;
