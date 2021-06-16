@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
+using SpanParser.Json;
 
 namespace LimeYoutubeAPI.Live
 {
@@ -19,18 +20,18 @@ namespace LimeYoutubeAPI.Live
         }
         internal BaseChatElement(JSpan json) : this(getChatChannel(json), getChatUtcTime(json), getChatMessageID(json)) { }
 
-        private static string getChatMessageID(JSpan chatItem) => chatItem["id"].AsStringValue();
+        private static string getChatMessageID(JSpan chatItem) => chatItem["id"].ToString();
         private static DateTime getChatUtcTime(JSpan chatItem)
         {
-            long value = long.Parse(chatItem["timestampUsec"].AsStringValue()) / 1000;
+            long value = long.Parse(chatItem["timestampUsec"].ToString()) / 1000;
             return DateTimeOffset.FromUnixTimeMilliseconds(value).UtcDateTime;
         }
         private static ChatChannel getChatChannel(JSpan chatItem)
         {
             var _authorName = chatItem["authorName"]["simpleText"];
-            string authorName = _authorName.IsEmpty ? "Unknown" : _authorName.AsStringValue();
-            ReadOnlySpan<char> authorIcon = chatItem["authorPhoto"]["thumbnails"].GetEnumerator().GetLast()["url"];
-            string authorID = chatItem["authorExternalChannelId"].AsStringValue();
+            string authorName = _authorName.IsEmpty ? "Unknown" : _authorName.ToString();
+            ReadOnlySpan<char> authorIcon = chatItem["authorPhoto"]["thumbnails"].GetEnumerator().Last()["url"].ToSpan();
+            string authorID = chatItem["authorExternalChannelId"].ToString();
             ChannelType authorType = ChannelType.None;
 
             var authorBadges = chatItem["authorBadges"].GetEnumerator();
@@ -41,7 +42,7 @@ namespace LimeYoutubeAPI.Live
                 var jjbdIcon = jjbd["icon"];
                 if (!(jjbd.IsEmpty||jjbdIcon.IsEmpty))
                 {
-                    switch (jjbdIcon["iconType"].AsStringValue())
+                    switch (jjbdIcon["iconType"].ToString())
                     {
                         case "VERIFIED": authorType |= ChannelType.Verified; break;
                         case "MODERATOR": authorType |= ChannelType.Moderator; break;

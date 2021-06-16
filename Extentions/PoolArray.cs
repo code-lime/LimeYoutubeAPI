@@ -4,11 +4,10 @@ using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
 using LimeYoutubeAPI.Interfaces;
-using LimeYoutubeAPI.SpanParseSrc;
 
 namespace LimeYoutubeAPI
 {
-    public class PoolArray<T> : IBuffer<T>, MemoryHolder<T>
+    public class PoolArray<T> : IBuffer<T>
         where T : unmanaged
     {
         private T[] buffer;
@@ -144,31 +143,6 @@ namespace LimeYoutubeAPI
         public ReadOnlySpan<T> Read(int startIndx)
         {
             return Read(startIndx, Length - startIndx);
-        }
-
-        public T GetByRef(int indx)
-        {
-            try
-            {
-                return this[indx];
-            }
-            catch
-            {
-                return default;
-            }
-        }
-
-        public int Add(T value)
-        {
-            var indx = Length;
-            SetSize(++Length, true);
-            this[indx] = value;
-            return indx;
-        }
-
-        public void Release()
-        {
-            Length = 0;
         }
     }
 }
