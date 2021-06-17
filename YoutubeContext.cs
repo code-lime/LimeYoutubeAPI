@@ -8,6 +8,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Linq;
 using SpanParser.Json;
+using Newtonsoft.Json.Linq;
 
 namespace LimeYoutubeAPI
 {
@@ -57,7 +58,7 @@ namespace LimeYoutubeAPI
             const string begin = "var ytInitialPlayerResponse = ";
 
             var text = buffer.Read().TakeBetwen(begin, end);
-            var result = JSpan.Parse(text, parseContext);
+            var result = JSpan.Parse(new string(text), parseContext);
             return result;
         }
 
@@ -67,7 +68,7 @@ namespace LimeYoutubeAPI
 
             var tempJson = youtubeData["continuationContents"]["liveChatContinuation"];
             var jtok = (tempJson.IsEmpty ? youtubeData["contents"]["liveChatRenderer"] : tempJson)["actions"];
-            if (!jtok.IsArray) return default;
+            //if (!jtok.IsArray) return default;
             return jtok;
         }
 
@@ -82,7 +83,7 @@ namespace LimeYoutubeAPI
             while (jsonArr.MoveNext())
             {
                 var item = jsonArr.Current;
-                if (item["videoRenderer"]["thumbnailOverlays"][0]["thumbnailOverlayTimeStatusRenderer"]["style"].ToSpan() != "LIVE") continue;
+                if (item["videoRenderer"]["thumbnailOverlays"][0]["thumbnailOverlayTimeStatusRenderer"]["style"].ToSpan().SequenceEqual("LIVE")) continue;
                 streamID = item["videoRenderer"]["videoId"].ToString();
                 break;
             }
@@ -94,13 +95,13 @@ namespace LimeYoutubeAPI
         {
             try
             {
+                parseContext.Release();
                 var status = await GetNewResponse(YoutubeURL.GetChannel(channelID));
                 if (!status) return null;
                 var result = GetChannel();
-                parseContext.Release();
                 return result;
             }
-            catch
+            catch (Exception e)
             {
                 return null;
             }
@@ -140,10 +141,10 @@ namespace LimeYoutubeAPI
         {
             try
             {
+                parseContext.Release();
                 var status = await GetNewResponse(YoutubeURL.GetVideo(videoID));
                 if (!status) return null;
                 var result = GetVideo();
-                parseContext.Release();
                 return result;
             }
             catch(Exception e)
@@ -160,13 +161,13 @@ namespace LimeYoutubeAPI
         {
             try
             {
+                parseContext.Release();
                 var status = await GetNewResponse(video);
                 if (!status) return null;
                 var result = GetVideoID();
-                parseContext.Release();
                 return result;
             }
-            catch
+            catch (Exception e)
             {
                 return null;
             }
@@ -177,14 +178,14 @@ namespace LimeYoutubeAPI
             var tempJson = json["continuationContents"]["liveChatContinuation"];
             var arr = (tempJson.IsEmpty ? json["contents"]["liveChatRenderer"] : tempJson);
 
-            arr = arr["header"];
-            tempJson = arr["liveChatHeaderRenderer"];
-            arr = tempJson.IsEmpty ? arr["liveChatBannerHeaderRenderer"] : tempJson;
-            arr = arr["viewSelector"];
-            arr = arr["sortFilterSubMenuRenderer"];
-            arr = arr["subMenuItems"];
+            arr = arr["header"]["liveChatHeaderRenderer"]["viewSelector"]["sortFilterSubMenuRenderer"]["subMenuItems"];
+            //tempJson = arr["liveChatHeaderRenderer"];
+            //arr = tempJson.IsEmpty ? arr["liveChatBannerHeaderRenderer"] : tempJson;
+            //arr = arr["viewSelector"];
+            //arr = arr["sortFilterSubMenuRenderer"];
+            //arr = arr["subMenuItems"];
 
-            if (!arr.IsArray) return null;
+            //if (!arr.IsArray) return null;
             string idFilter = arr[0]["continuation"]["reloadContinuationData"]["continuation"].ToString();
             string idFull = arr[1]["continuation"]["reloadContinuationData"]["continuation"].ToString();
             return new YoutubeLiveChatInfo(YoutubeURL.GetLiveChatContinuation(idFull), YoutubeURL.GetLiveChatContinuation(idFilter));
@@ -193,13 +194,13 @@ namespace LimeYoutubeAPI
         {
             try
             {
+                parseContext.Release();
                 var status = await GetNewResponse(YoutubeURL.GetLiveChat(videoID));
                 if (!status) return null;
                 var result = GetLiveChatInfo();
-                parseContext.Release();
                 return result;
             }
-            catch
+            catch (Exception e)
             {
                 return null;
             }
@@ -247,13 +248,13 @@ namespace LimeYoutubeAPI
         {
             try
             {
+                parseContext.Release();
                 var status = await GetNewResponse(liveChat);
                 if (!status) return null;
                 var elm = getChatElements(GetChatMessagesData(GetYoutubeData()));
-                parseContext.Release();
                 return elm.Any() ? elm : null;
             }
-            catch
+            catch (Exception e)
             {
                 return null;
             }
