@@ -68,7 +68,8 @@ namespace LimeYoutubeAPI
 
             var tempJson = youtubeData["continuationContents"]["liveChatContinuation"];
             var jtok = (tempJson.IsEmpty ? youtubeData["contents"]["liveChatRenderer"] : tempJson)["actions"];
-            //if (!jtok.IsArray) return default;
+            if (!jtok.IsArray)
+                return default;
             return jtok;
         }
 
@@ -179,13 +180,8 @@ namespace LimeYoutubeAPI
             var arr = (tempJson.IsEmpty ? json["contents"]["liveChatRenderer"] : tempJson);
 
             arr = arr["header"]["liveChatHeaderRenderer"]["viewSelector"]["sortFilterSubMenuRenderer"]["subMenuItems"];
-            //tempJson = arr["liveChatHeaderRenderer"];
-            //arr = tempJson.IsEmpty ? arr["liveChatBannerHeaderRenderer"] : tempJson;
-            //arr = arr["viewSelector"];
-            //arr = arr["sortFilterSubMenuRenderer"];
-            //arr = arr["subMenuItems"];
 
-            //if (!arr.IsArray) return null;
+            if (!arr.IsArray) return null;
             string idFilter = arr[0]["continuation"]["reloadContinuationData"]["continuation"].ToString();
             string idFull = arr[1]["continuation"]["reloadContinuationData"]["continuation"].ToString();
             return new YoutubeLiveChatInfo(YoutubeURL.GetLiveChatContinuation(idFull), YoutubeURL.GetLiveChatContinuation(idFilter));
@@ -206,42 +202,71 @@ namespace LimeYoutubeAPI
             }
         }
 
-        private IEnumerable<BaseChatElement> getChatElements(JSpan chatMessages)
+        private JSpan GetChatItem(JSpan chatMess, out bool isSponsor)
+        {
+            isSponsor = false;
+            var chatItem = chatMess["addChatItemAction"];
+            if (chatItem.IsEmpty) return default;
+            var _item = chatItem["item"];
+            if (_item.IsEmpty) return default;
+
+            chatItem = _item["liveChatTextMessageRenderer"];
+            if (!chatItem.IsEmpty)
+            {
+                return chatItem;
+            }
+            else
+            {
+                chatItem = _item["liveChatMembershipItemRenderer"];
+                if (!chatItem.IsEmpty)
+                {
+                    isSponsor = true;
+                    return chatItem;
+                }
+                else
+                {
+                    return default;
+                }
+            }
+        }
+
+        private IEnumerable<BaseChatElement> getChatElements(JSpan chatMessages, ref string lastMessId)
         {
             var chatMessagesIter = chatMessages.GetEnumerator();
             chatMessagesIter.ResetToLast();
             var list = new List<BaseChatElement>(chatMessagesIter.Count());
-            while(chatMessagesIter.MovePrevious())
+            if (!(chatMessagesIter.MovePrevious() && chatMessagesIter.MovePrevious() && chatMessagesIter.MovePrevious()))
             {
-                BaseChatElement msg;
+                return list;
+            }
+            var lastChatItem = GetChatItem(chatMessagesIter.Current, out var isSponsor);
+
+            var lastChatItemId = lastChatItem["id"].ToSpan();
+            if (lastChatItemId == lastMessId)
+            {
+                return list;
+            }
+            list.Add(isSponsor ? (BaseChatElement)new ChatSponsor(lastChatItem) : new ChatMessage(lastChatItem));
+            var newlastMessId = lastChatItemId.ToString();
+
+            while (chatMessagesIter.MovePrevious())
+            {
                 try
                 {
-                    var chatItem = chatMessagesIter.Current["addChatItemAction"];
-                    if (chatItem.IsEmpty) continue;
-                    var _item = chatItem["item"];
-                    if (_item.IsEmpty) continue;
+                    var chatItem = GetChatItem(chatMessagesIter.Current, out isSponsor);
 
-                    chatItem = _item["liveChatTextMessageRenderer"];
-                    if (!chatItem.IsEmpty)
+                    if (chatItem.IsEmpty) continue;
+
+                    if (chatItem["id"].ToSpan() == lastMessId)
                     {
-                        msg = new ChatMessage(chatItem);
+                        return list;
                     }
-                    else
-                    {
-                        chatItem = _item["liveChatMembershipItemRenderer"];
-                        if (!chatItem.IsEmpty)
-                        {
-                            msg = new ChatSponsor(chatItem);
-                        }
-                        else
-                        {
-                            continue;
-                        }
-                    }
+
+                    list.Add(isSponsor ? (BaseChatElement)new ChatSponsor(chatItem) : new ChatMessage(chatItem));
                 }
                 catch { continue; }
-                list.Add(msg);
             }
+            lastMessId = newlastMessId;
             return list;
         }
         public async Task<IEnumerable<BaseChatElement>> GetChatElementsAsync(Uri liveChat)
@@ -251,7 +276,8 @@ namespace LimeYoutubeAPI
                 parseContext.Release();
                 var status = await GetNewResponse(liveChat);
                 if (!status) return null;
-                var elm = getChatElements(GetChatMessagesData(GetYoutubeData()));
+                string str = null;
+                var elm = getChatElements(GetChatMessagesData(GetYoutubeData()), ref str);
                 return elm.Any() ? elm : null;
             }
             catch (Exception e)
@@ -259,6 +285,20 @@ namespace LimeYoutubeAPI
                 return null;
             }
         }
-
+        public async Task<(IEnumerable<BaseChatElement> Messages, string NewLastMessageId)> GetNewChatElementsAsync(Uri liveChat, string lastChatMessId)
+        {
+            try
+            {
+                parseContext.Release();
+                var status = await GetNewResponse(liveChat);
+                if (!status) return (null, lastChatMessId);
+                var elm = getChatElements(GetChatMessagesData(GetYoutubeData()), ref lastChatMessId);
+                return elm.Any() ? (elm, lastChatMessId) : (null, lastChatMessId);
+            }
+            catch (Exception e)
+            {
+                return (null, lastChatMessId);
+            }
+        }
     }
 }

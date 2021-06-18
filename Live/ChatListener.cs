@@ -41,7 +41,7 @@ namespace LimeYoutubeAPI.Live
                 }
                 YoutubeStream = (YoutubeStream)video;
 
-                string lastMessageID = null;
+                string lastMessageID = string.Empty;
                 int errors = 0;
                 DateTime utcInit = DateTime.UtcNow;
                 token.ThrowIfCancellationRequested();
@@ -57,21 +57,26 @@ namespace LimeYoutubeAPI.Live
                     }
                     await Task.Delay(updateTimeout, token);
                     token.ThrowIfCancellationRequested();
-                    string firstMessageID = null;
-                    IEnumerable<BaseChatElement> elements = await service.GetChatElementsAsync(liveChatInfo.FullLiveChat);
+                    var chatElementsResponse = await service.GetNewChatElementsAsync(liveChatInfo.FullLiveChat, lastMessageID);
+                    IEnumerable<BaseChatElement> elements = chatElementsResponse.Messages;
                     if (elements == null)
                     {
                         errors++;
                         continue;
                     }
-                    foreach (var element in elements.Where(element => { if (lastMessageID == null && element.UtcTime < utcInit) return false; if (firstMessageID == null) firstMessageID = element.MessageID; return true; }).TakeWhile(element => lastMessageID != element.MessageID).Reverse())
+                    foreach (var element in elements.Where
+                        (element => 
+                        { 
+                        if (string.IsNullOrEmpty(lastMessageID) && element.UtcTime < utcInit) return false; 
+                        return true; 
+                        }))
                     {
                         token.ThrowIfCancellationRequested();
                         if (element is ChatMessage message) MessageEvent?.Invoke(message);
                         else if (element is ChatSponsor sponsor) SponsorEvent?.Invoke(sponsor);
                     }
                     errors = 0;
-                    lastMessageID = firstMessageID ?? lastMessageID;
+                    lastMessageID = chatElementsResponse.NewLastMessageId;
                 }
             }
             catch (OperationCanceledException) { }
