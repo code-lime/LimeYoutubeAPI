@@ -8,8 +8,9 @@ namespace LimeYoutubeAPI
     {
         public static ReadOnlySpan<T> TakeBetwen<T>(this ReadOnlySpan<T> source, ReadOnlySpan<T> beganKey, ReadOnlySpan<T> endKey) where T: IEquatable<T>
         {
-            var startIndx = source.IndexOf(beganKey) + beganKey.Length;
+            var startIndx = source.IndexOf(beganKey);
             if (startIndx == -1) return ReadOnlySpan<T>.Empty;
+            startIndx += beganKey.Length;
 
             var endIndx = source[startIndx..].IndexOf(endKey);
             if (endIndx == -1) return ReadOnlySpan<T>.Empty;
@@ -19,8 +20,9 @@ namespace LimeYoutubeAPI
 
         public static ReadOnlySpan<T> TakeBetwen<T>(this ReadOnlySpan<T> source, T beganKey, T endKey) where T : IEquatable<T>
         {
-            var startIndx = source.IndexOf(beganKey) + 1;
+            var startIndx = source.IndexOf(beganKey);
             if (startIndx == -1) return ReadOnlySpan<T>.Empty;
+            startIndx += 1;
 
             var endIndx = source[startIndx..].IndexOf(endKey);
             if (endIndx == -1) return ReadOnlySpan<T>.Empty;
