@@ -84,7 +84,7 @@ namespace LimeYoutubeAPI
             while (jsonArr.MoveNext())
             {
                 var item = jsonArr.Current;
-                if (item["videoRenderer"]["thumbnailOverlays"][0]["thumbnailOverlayTimeStatusRenderer"]["style"].ToSpan().SequenceEqual("LIVE")) continue;
+                if (!item["videoRenderer"]["thumbnailOverlays"][0]["thumbnailOverlayTimeStatusRenderer"]["style"].ToSpan().SequenceEqual("LIVE")) continue;
                 streamID = item["videoRenderer"]["videoId"].ToString();
                 break;
             }
@@ -235,17 +235,11 @@ namespace LimeYoutubeAPI
             var chatMessagesIter = chatMessages.GetEnumerator();
             chatMessagesIter.ResetToLast();
             var list = new List<BaseChatElement>(chatMessagesIter.Count());
-            if (!(chatMessagesIter.MovePrevious() && chatMessagesIter.MovePrevious() && chatMessagesIter.MovePrevious()))
-            {
-                return list;
-            }
+            while (chatMessagesIter.MovePrevious() && GetChatItem(chatMessagesIter.Current, out _).IsEmpty) { }
             var lastChatItem = GetChatItem(chatMessagesIter.Current, out var isSponsor);
 
             var lastChatItemId = lastChatItem["id"].ToSpan();
-            if (lastChatItemId == lastMessId)
-            {
-                return list;
-            }
+            if (lastChatItemId.SequenceEqual(lastMessId)) return list;
             list.Add(isSponsor ? (BaseChatElement)new ChatSponsor(lastChatItem) : new ChatMessage(lastChatItem));
             var newlastMessId = lastChatItemId.ToString();
 
@@ -254,15 +248,9 @@ namespace LimeYoutubeAPI
                 try
                 {
                     var chatItem = GetChatItem(chatMessagesIter.Current, out isSponsor);
-
                     if (chatItem.IsEmpty) continue;
-
-                    if (chatItem["id"].ToSpan() == lastMessId)
-                    {
-                        return list;
-                    }
-
-                    list.Add(isSponsor ? (BaseChatElement)new ChatSponsor(chatItem) : new ChatMessage(chatItem));
+                    if (chatItem["id"].ToSpan().SequenceEqual(lastMessId)) break;
+                    list.Insert(0, isSponsor ? (BaseChatElement)new ChatSponsor(chatItem) : new ChatMessage(chatItem));
                 }
                 catch { continue; }
             }

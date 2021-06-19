@@ -92,21 +92,26 @@ namespace LimeYoutubeAPI.Live
                             }
                             await Task.Delay(updateTimeout);
                             token.ThrowIfCancellationRequested();
-                            string firstElementID = null;
-                            IEnumerable<BaseChatElement> elements = await service.GetChatElementsAsync(dataStream.LiveChat.FullLiveChat);
+                            var chatElementsResponse = await service.GetNewChatElementsAsync(dataStream.LiveChat.FullLiveChat, dataStream.lastMessageID);
+                            IEnumerable<BaseChatElement> elements = chatElementsResponse.Messages;
                             if (elements == null)
                             {
                                 dataStream.errors++;
                                 continue;
                             }
-                            foreach (var element in elements.Where(element => { if (dataStream.lastMessageID == null && element.UtcTime < dataStream.utcInit) return false; if (firstElementID == null) firstElementID = element.MessageID; return true; }).TakeWhile(element => dataStream.lastMessageID != element.MessageID).Reverse())
+                            foreach (var element in elements.Where
+                                (element =>
+                                {
+                                    if (string.IsNullOrEmpty(dataStream.lastMessageID) && element.UtcTime < dataStream.utcInit) return false;
+                                    return true;
+                                }))
                             {
                                 token.ThrowIfCancellationRequested();
                                 if (element is ChatMessage message) MessageEvent?.Invoke(videoID, message);
                                 else if (element is ChatSponsor sponsor) SponsorEvent?.Invoke(videoID, sponsor);
                             }
                             dataStream.errors = 0;
-                            dataStream.lastMessageID = firstElementID ?? dataStream.lastMessageID;
+                            dataStream.lastMessageID = chatElementsResponse.NewLastMessageId;
                         }
                         catch (Exception e)
                         {

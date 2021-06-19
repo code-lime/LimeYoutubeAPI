@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Library</OutputType>
+    <OutputType>Exe</OutputType>
     <TargetFramework>netcoreapp3.1</TargetFramework>
   </PropertyGroup>
 
@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\JsonSpanParser\src\JsonSpanParser.csproj" />
+    <ProjectReference Include="..\..\Downloads\SpanParser.Json-master\SpanParser.Json-master\src\JsonSpanParser.csproj" />
   </ItemGroup>
 
 </Project>

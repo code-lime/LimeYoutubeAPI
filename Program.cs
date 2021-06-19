@@ -9,30 +9,40 @@ using System.Text;
 
 namespace LimeYoutubeAPI
 {
-    public static class Program
+    internal static class Program
     {
-        public static void Main(string[] args)
+        public static void MainMulit()
         {
             using (YoutubeService service = YoutubeService.Create())
             using (MultiChatListener listener = service.CreateMultiChatListener())
             {
-                listener.RegisterChannel("UCwKfmsba1g3SDcOzbU4zPXw", v => Listener_MessageEvent("ФУГА TV", v), v => Listener_SponsorEvent("ФУГА TV", v), v => Listener_StateEvent("ФУГА TV", v)).Wait();
-                //listener.RegisterChannel("UC0rdUtnXyfzgQQz25wrkbSQ", v => Listener_MessageEvent("TEMP", v), v => Listener_StateEvent("TEMP", v)).Wait();
-                Task.WaitAll(listener.Run());
-                /*ChatListener listener = await service.RunChatByChannel("UCwKfmsba1g3SDcOzbU4zPXw");
-                if (listener == null) return;
-                using (listener)
-                {
-                    listener.StateEvent += Listener_StateEvent;
-                    listener.MessageEvent += Listener_MessageEvent;
-                    Task.WaitAll(listener.Task);
-                }*/
+                listener.RegisterChannel("UCSJ4gkVC6NrvII8umztf0Ow", v => Listener_MessageEvent("MULTI", v), v => Listener_SponsorEvent("MULTI", v), v => Listener_StateEvent("MULTI", v)).Wait();
+                listener.Run().Wait();
             }
+        }
+        public static void MainSingle()
+        {
+            using (YoutubeService service = YoutubeService.Create())
+            using (ChatListener listener = service.CreateChatListener())
+            {
+                listener.MessageEvent += (msg) => Listener_MessageEvent("SINGLE", msg);
+                listener.SponsorEvent += (sponsor) => Listener_SponsorEvent("SINGLE", sponsor);
+                listener.StateEvent += (state) => Listener_StateEvent("SINGLE", state);
+                listener
+                    .Run("5qap5aO4i9A")
+                    .Wait();
+            }
+        }
+
+        public static void Main(string[] args)
+        {
+            MainMulit();
+            //MainSingle();
         }
 
         private static void Listener_MessageEvent(string prefix, ChatMessage obj)
         {
-            //Console.WriteLine($"[{prefix}] [{obj.UtcTime.ToString("dd.MM.yyyy HH:mm:ss")}] {obj.Author.UserName}: {obj.Context}");
+            Console.WriteLine($"[{prefix}] [{obj.UtcTime.ToString("dd.MM.yyyy HH:mm:ss")}] {obj.Author.UserName}: {obj.Context}");
         }
         
         private static void Listener_SponsorEvent(string prefix, ChatSponsor obj)
