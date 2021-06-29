@@ -21,11 +21,13 @@ namespace LimeYoutubeAPI
 
         private PoolArray<byte> receiveBuffer = new PoolArray<byte>();
         private SemaphoreSlim bufferGate = new SemaphoreSlim(1);
+        private YoutubeContext context;
 
         public YoutubeService(INet net)
         {
             if (net == null) throw new ArgumentNullException(nameof(net));
             this.net = net;
+            this.context = new YoutubeContext(this);
         }
         internal async Task<HttpStatusCode> GetYoutubeResponse(Uri youtubeURL, PoolArray<char> dataReceiver)
         {
@@ -214,6 +216,11 @@ namespace LimeYoutubeAPI
 
         public ChatListener CreateChatListener() => new ChatListener(new YoutubeContext(this));
         public MultiChatListener CreateMultiChatListener() => new MultiChatListener(new YoutubeContext(this));
+
+        public Task<YoutubeChannel> GetChannelAsync(string channelID) => this.context.GetChannelAsync(channelID);
+        public Task<YoutubeVideo> GetVideoAsync(string videoID) => this.context.GetVideoAsync(videoID);
+        public Task<string> GetVideoIDAsync(Uri video) => this.context.GetVideoIDAsync(video);
+        public Task<YoutubeLiveChatInfo> GetLiveChatInfoAsync(string videoID) => this.context.GetLiveChatInfoAsync(videoID);
 
         public void Dispose() => net.Dispose();
     }

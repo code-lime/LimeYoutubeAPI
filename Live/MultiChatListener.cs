@@ -39,15 +39,16 @@ namespace LimeYoutubeAPI.Live
             if (sponsorEvent != null) SponsorEvent += (id, msg) => { if (id == videoID) sponsorEvent.Invoke(msg); };
             YoutubeStreams[videoID] = null;
         }
-        public async Task RegisterChannel(string channelID, Action<ChatMessage> messageEvent = null, Action<ChatSponsor> sponsorEvent = null, Action<ChatState> stateEvent = null)
+        public async Task<string> RegisterChannel(string channelID, Action<ChatMessage> messageEvent = null, Action<ChatSponsor> sponsorEvent = null, Action<ChatState> stateEvent = null)
         {
             YoutubeChannel channel = await service.GetChannelAsync(channelID);
             if (channel.StreamID == null)
             {
                 stateEvent?.Invoke(new ChatState(404, "Stream not founded"));
-                return;
+                return null;
             }
             RegisterVideo(channel.StreamID, messageEvent, sponsorEvent, stateEvent);
+            return channel.StreamID;
         }
         private async Task RunMultiTask(TimeSpan updateTimeout, CancellationToken token)
         {
@@ -82,7 +83,7 @@ namespace LimeYoutubeAPI.Live
                                 }
                                 YoutubeStreams[videoID] = dataStream = new DataStream((YoutubeStream)video, liveChatInfo);
                                 token.ThrowIfCancellationRequested();
-                                StateEvent?.Invoke(videoID, new ChatState(200, $"LiveChat starded: {video.ChannelName}"));
+                                StateEvent?.Invoke(videoID, new ChatState(200, video.ChannelID));
                             }
                             token.ThrowIfCancellationRequested();
                             if (dataStream.errors > 10)
@@ -125,6 +126,10 @@ namespace LimeYoutubeAPI.Live
             {
 
             }
+        }
+        public void CancelStream(string videoID)
+        {
+            if (YoutubeStreams.TryRemove(videoID, out _)) StateEvent?.Invoke(videoID, new ChatState(400, "LiveChat canceled"));
         }
         public void Dispose()
         {

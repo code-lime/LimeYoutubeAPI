@@ -281,7 +281,7 @@ namespace LimeYoutubeAPI
                 var status = await GetNewResponse(liveChat);
                 if (!status) return (null, lastChatMessId);
                 var elm = getChatElements(GetChatMessagesData(GetYoutubeData()), ref lastChatMessId);
-                return elm.Any() ? (elm, lastChatMessId) : (null, lastChatMessId);
+                return elm.Any() ? (elm, lastChatMessId) : (Enumerable.Empty<BaseChatElement>(), lastChatMessId);
             }
             catch (Exception e)
             {

@@ -45,7 +45,7 @@ namespace LimeYoutubeAPI.Live
                 int errors = 0;
                 DateTime utcInit = DateTime.UtcNow;
                 token.ThrowIfCancellationRequested();
-                StateEvent?.Invoke(new ChatState(200, $"LiveChat starded: {YoutubeStream.ChannelName}"));
+                StateEvent?.Invoke(new ChatState(200, YoutubeStream.ChannelID));
 
                 while (true)
                 {
