@@ -36,8 +36,10 @@ namespace LimeYoutubeAPI
             }
 
             await bufferGate.WaitAsync();
+            receiveBuffer.Release();
+
             var code = await net.GetAsync(youtubeURL, receiveBuffer);
-            if (code!= HttpStatusCode.OK)
+            if (code != HttpStatusCode.OK)
             {
                 bufferGate.Release();
                 return code;

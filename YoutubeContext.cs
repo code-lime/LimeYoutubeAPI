@@ -58,7 +58,7 @@ namespace LimeYoutubeAPI
             const string begin = "var ytInitialPlayerResponse = ";
 
             var text = buffer.Read().TakeBetwen(begin, end);
-            var result = JSpan.Parse(new string(text), parseContext);
+            var result = JSpan.Parse(text, parseContext);
             return result;
         }
 

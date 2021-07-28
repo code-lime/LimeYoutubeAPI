@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Runtime.InteropServices;
 using LimeYoutubeAPI.Interfaces;
+using System.IO;
 
 namespace LimeYoutubeAPI
 {
@@ -111,9 +112,19 @@ namespace LimeYoutubeAPI
             }
         }
         public T[] Write(int length)
-        {
+        { 
             SetSize(length);
             return buffer;
+        }
+        public void WriteBuffer(T[] buf, int length)
+        {
+            var startPos = Length;
+            SetSize(Length + length, true);
+            Array.Copy(buf, 0, buffer, startPos, length);
+        }
+        public void Release()
+        {
+            Length = 0;
         }
 
         public unsafe T* ReadByPointer()

@@ -7,7 +7,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LimeYoutubeAPI", "LimeYoutu
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "LimeYoutubeAPIBanchmarks", "..\LimeYoutubeAPIBanchmarks\LimeYoutubeAPIBanchmarks.csproj", "{6BCE6C48-B2AF-49A2-9F76-C10BD420D281}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonSpanParser", "..\..\Downloads\SpanParser.Json-master\SpanParser.Json-master\src\JsonSpanParser.csproj", "{2F55E5D4-33B4-46B9-BC3F-2C9AD20A0569}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "JsonSpanParser", "..\JsonSpanParser\src\JsonSpanParser.csproj", "{7CA82F1E-6DD7-42EB-B43D-0600DF151BD4}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -23,10 +23,10 @@ Global
 		{6BCE6C48-B2AF-49A2-9F76-C10BD420D281}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{6BCE6C48-B2AF-49A2-9F76-C10BD420D281}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{6BCE6C48-B2AF-49A2-9F76-C10BD420D281}.Release|Any CPU.Build.0 = Release|Any CPU
-		{2F55E5D4-33B4-46B9-BC3F-2C9AD20A0569}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{2F55E5D4-33B4-46B9-BC3F-2C9AD20A0569}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{2F55E5D4-33B4-46B9-BC3F-2C9AD20A0569}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{2F55E5D4-33B4-46B9-BC3F-2C9AD20A0569}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7CA82F1E-6DD7-42EB-B43D-0600DF151BD4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7CA82F1E-6DD7-42EB-B43D-0600DF151BD4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7CA82F1E-6DD7-42EB-B43D-0600DF151BD4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7CA82F1E-6DD7-42EB-B43D-0600DF151BD4}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
