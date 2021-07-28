@@ -12,16 +12,20 @@ namespace LimeYoutubeAPI.Models
     public class MozillaNet : INet
     {
         public virtual string MozillaAgent => "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/51.0.2704.103 Safari/537.36";
-        protected virtual HttpClient Client => new HttpClient();
+        protected virtual HttpWebRequest CreateRequest(Uri url)
+        {
+            HttpWebRequest request = WebRequest.CreateHttp(url);
+            request.UserAgent = MozillaAgent;
+            return request;
+        }
         public Encoding Encoding => Encoding.UTF8;
 
         private byte[] copyBuffer = new byte[8_192];
 
         public virtual async Task<HttpStatusCode> GetAsync(Uri url, IBuffer<byte> writeOnlyUTF8Buffer)
         {
-            var request = WebRequest.CreateHttp(url);
-            request.UserAgent = MozillaAgent;
-            var response = (HttpWebResponse) await request.GetResponseAsync();
+            var request = CreateRequest(url);
+            var response = (HttpWebResponse)await request.GetResponseAsync();
             if (response.StatusCode != HttpStatusCode.OK) return response.StatusCode;
 
             using (var stream = response.GetResponseStream())
@@ -48,7 +52,6 @@ namespace LimeYoutubeAPI.Models
             ////Console.ReadKey();
             //var stream = await response.Content.ReadAsStreamAsync();
             //stream.Read(writeOnlyUTF8Buffer.Write((int)stream.Length), 0, (int)stream.Length);
-
             return HttpStatusCode.OK;
         }
 

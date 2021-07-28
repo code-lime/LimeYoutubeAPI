@@ -20,6 +20,11 @@ namespace LimeYoutubeAPI.Models
             foreach (var kv in proxyList) ProxyList.Add(new WebProxy(GetURL(kv.Key)) { Credentials = kv.Value });
         }
         public NetworkCredential this[IPEndPoint ip] { set => ProxyList.Add(new WebProxy(GetURL(ip)) { Credentials = value }); }
-        protected override HttpClient Client => new HttpClient(new HttpClientHandler { Proxy = RandomProxy });
+        protected override HttpWebRequest CreateRequest(Uri url)
+        {
+            HttpWebRequest req = base.CreateRequest(url);
+            req.Proxy = RandomProxy;
+            return req;
+        }
     }
 }

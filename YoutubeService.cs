@@ -21,11 +21,13 @@ namespace LimeYoutubeAPI
 
         private PoolArray<byte> receiveBuffer = new PoolArray<byte>();
         private SemaphoreSlim bufferGate = new SemaphoreSlim(1);
+        private YoutubeContext context;
 
         public YoutubeService(INet net)
         {
             if (net == null) throw new ArgumentNullException(nameof(net));
             this.net = net;
+            this.context = new YoutubeContext(this);
         }
         internal async Task<HttpStatusCode> GetYoutubeResponse(Uri youtubeURL, PoolArray<char> dataReceiver)
         {
@@ -216,6 +218,36 @@ namespace LimeYoutubeAPI
 
         public ChatListener CreateChatListener() => new ChatListener(new YoutubeContext(this));
         public MultiChatListener CreateMultiChatListener() => new MultiChatListener(new YoutubeContext(this));
+
+        private SemaphoreSlim apiSlim = new SemaphoreSlim(1);
+        public async Task<YoutubeChannel> GetChannelAsync(string channelID)
+        {
+            await apiSlim.WaitAsync();
+            YoutubeChannel channel = await this.context.GetChannelAsync(channelID);
+            apiSlim.Release();
+            return channel;
+        }
+        public async Task<YoutubeVideo> GetVideoAsync(string videoID)
+        {
+            await apiSlim.WaitAsync();
+            YoutubeVideo video = await this.context.GetVideoAsync(videoID);
+            apiSlim.Release();
+            return video;
+        }
+        public async Task<string> GetVideoIDAsync(Uri video)
+        {
+            await apiSlim.WaitAsync();
+            string data = await this.context.GetVideoIDAsync(video);
+            apiSlim.Release();
+            return data;
+        }
+        public async Task<YoutubeLiveChatInfo> GetLiveChatInfoAsync(string videoID)
+        {
+            await apiSlim.WaitAsync();
+            YoutubeLiveChatInfo youtube = await this.context.GetLiveChatInfoAsync(videoID);
+            apiSlim.Release();
+            return youtube;
+        }
 
         public void Dispose() => net.Dispose();
     }
