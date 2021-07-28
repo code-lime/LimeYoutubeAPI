@@ -75,7 +75,6 @@ namespace LimeYoutubeAPI
 
             var text = buffer.Read().TakeBetwen(begin, end);
             var result = JSpan.Parse(text, parseContext);
-            var result = JSpan.Parse(text, parseContext);
             return result;
         }
 
