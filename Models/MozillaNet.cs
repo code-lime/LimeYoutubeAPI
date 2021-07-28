@@ -20,6 +20,7 @@ namespace LimeYoutubeAPI.Models
         public virtual async Task<HttpStatusCode> GetAsync(Uri url, IBuffer<byte> writeOnlyUTF8Buffer)
         {
             var request = CreateRequest(url);
+            request.UserAgent = MozillaAgent;
             var response = (HttpWebResponse)await request.GetResponseAsync();
             if (response.StatusCode != HttpStatusCode.OK) return response.StatusCode;
 
