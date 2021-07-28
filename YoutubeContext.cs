@@ -34,6 +34,21 @@ namespace LimeYoutubeAPI
             return code == System.Net.HttpStatusCode.OK;
         }
 
+        /*private static bool isNew = true;
+        private static object _lock = new object();
+        private static void WriteTemp(ReadOnlySpan<char> str)
+        {
+            lock (_lock)
+            {
+                if (isNew)
+                {
+                    if (System.IO.File.Exists("temp.json")) System.IO.File.Copy("temp.json", "temp-"+DateTime.Now.Ticks+".json");
+                    isNew = false;
+                }
+                System.IO.File.WriteAllText("temp.json", str.ToString());
+            }
+        }*/
+
         internal JSpan GetYoutubeData()
         {
             const string begin = "window[\"ytInitialData\"] = ";
@@ -48,6 +63,7 @@ namespace LimeYoutubeAPI
             {
                 text = readed.TakeBetwen(begin2, end);
             }
+            //WriteTemp(text);
             var result = JSpan.Parse(text, parseContext);
             return result;
         }
@@ -58,7 +74,8 @@ namespace LimeYoutubeAPI
             const string begin = "var ytInitialPlayerResponse = ";
 
             var text = buffer.Read().TakeBetwen(begin, end);
-            var result = JSpan.Parse(new string(text), parseContext);
+            //WriteTemp(text);
+            var result = JSpan.Parse(text, parseContext);
             return result;
         }
 

@@ -8,5 +8,6 @@ namespace LimeYoutubeAPI.Interfaces
     {
         public unsafe T* WriteByPointer(int length);
         public T[] Write(int length);
+        public void WriteBuffer(T[] buf, int length);
     }
 }

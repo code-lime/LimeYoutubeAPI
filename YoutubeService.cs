@@ -38,8 +38,9 @@ namespace LimeYoutubeAPI
             }
 
             await bufferGate.WaitAsync();
+            receiveBuffer.Release();
             var code = await net.GetAsync(youtubeURL, receiveBuffer);
-            if (code!= HttpStatusCode.OK)
+            if (code != HttpStatusCode.OK)
             {
                 bufferGate.Release();
                 return code;
@@ -217,10 +218,35 @@ namespace LimeYoutubeAPI
         public ChatListener CreateChatListener() => new ChatListener(new YoutubeContext(this));
         public MultiChatListener CreateMultiChatListener() => new MultiChatListener(new YoutubeContext(this));
 
-        public Task<YoutubeChannel> GetChannelAsync(string channelID) => this.context.GetChannelAsync(channelID);
-        public Task<YoutubeVideo> GetVideoAsync(string videoID) => this.context.GetVideoAsync(videoID);
-        public Task<string> GetVideoIDAsync(Uri video) => this.context.GetVideoIDAsync(video);
-        public Task<YoutubeLiveChatInfo> GetLiveChatInfoAsync(string videoID) => this.context.GetLiveChatInfoAsync(videoID);
+        private SemaphoreSlim apiSlim = new SemaphoreSlim(1);
+        public async Task<YoutubeChannel> GetChannelAsync(string channelID)
+        {
+            await apiSlim.WaitAsync();
+            YoutubeChannel channel = await this.context.GetChannelAsync(channelID);
+            apiSlim.Release();
+            return channel;
+        }
+        public async Task<YoutubeVideo> GetVideoAsync(string videoID)
+        {
+            await apiSlim.WaitAsync();
+            YoutubeVideo video = await this.context.GetVideoAsync(videoID);
+            apiSlim.Release();
+            return video;
+        }
+        public async Task<string> GetVideoIDAsync(Uri video)
+        {
+            await apiSlim.WaitAsync();
+            string data = await this.context.GetVideoIDAsync(video);
+            apiSlim.Release();
+            return data;
+        }
+        public async Task<YoutubeLiveChatInfo> GetLiveChatInfoAsync(string videoID)
+        {
+            await apiSlim.WaitAsync();
+            YoutubeLiveChatInfo youtube = await this.context.GetLiveChatInfoAsync(videoID);
+            apiSlim.Release();
+            return youtube;
+        }
 
         public void Dispose() => net.Dispose();
     }

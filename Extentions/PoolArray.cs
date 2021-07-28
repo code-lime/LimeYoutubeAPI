@@ -115,6 +115,16 @@ namespace LimeYoutubeAPI
             SetSize(length);
             return buffer;
         }
+        public void WriteBuffer(T[] buf, int length)
+        {
+            var startPos = Length;
+            SetSize(Length + length, true);
+            Array.Copy(buf, 0, buffer, startPos, length);
+        }
+        public void Release()
+        {
+            Length = 0;
+        }
 
         public unsafe T* ReadByPointer()
         {

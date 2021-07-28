@@ -15,10 +15,7 @@
 
   <ItemGroup>
     <PackageReference Include="Newtonsoft.Json" Version="13.0.1" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\Downloads\SpanParser.Json-master\SpanParser.Json-master\src\JsonSpanParser.csproj" />
+    <PackageReference Include="SpanParser.Json" Version="0.9.3" />
   </ItemGroup>
 
 </Project>
