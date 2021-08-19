@@ -40,7 +40,7 @@ namespace LimeYoutubeAPI.Live
                 var jbd = authorBadges.Current;
                 var jjbd = jbd["liveChatAuthorBadgeRenderer"];
                 var jjbdIcon = jjbd["icon"];
-                if (!(jjbd.IsEmpty||jjbdIcon.IsEmpty))
+                if (!(jjbd.IsEmpty || jjbdIcon.IsEmpty))
                 {
                     switch (jjbdIcon["iconType"].ToString())
                     {
@@ -50,7 +50,10 @@ namespace LimeYoutubeAPI.Live
                         default: authorType |= ChannelType.Other; break;
                     }
                 }
-                else authorType |= ChannelType.Sponsor;
+                else
+                {
+                    authorType |= ChannelType.Sponsor;
+                }
             }
 
             authorIcon = authorIcon[(authorIcon.LastIndexOf('/') + 1)..authorIcon.IndexOf('=')];
